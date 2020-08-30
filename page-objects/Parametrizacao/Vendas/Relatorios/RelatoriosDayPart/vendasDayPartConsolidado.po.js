@@ -1,52 +1,95 @@
-var ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
-var z = new ZeedhiAPIConstructor(browser, protractor);
-var funcoes = require('../../../../../page-objects/helper.po.js');
+const ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
+const z = new ZeedhiAPIConstructor(browser, protractor);
+const h = require('../../../../../page-objects/helper.po.js');
 
-var vendasDayPart = function(){
-	self = this;
-    //emite o relatório consolidado, caso o relatório exibir dados retornará 'true' senão retornará 'false'
-    this.consolidado = function(unidade, loja, dataInicial, dataFinal, horaInicial, horaFinal){
-        //verifica se uma filial foi selecionada, remove do campo e seleciona a filial no filtro
-        z.util.elementExists(by.css('#NMFILIAL > div > span')).then(function(selecao){
-            if(selecao){
-                z.util.clickElement(by.css('#NMFILIAL > div > span > span'));
-            }
-        });//promise
-        //informa a unidade que utiliza o daypart
-        z.field.fieldFunctions.click('NMFILIAL');
-        //recebe id do grid presente dentro do popup e seleciona a linha do grid que contem a unidade
-        var idGrid = funcoes.getIdGrid().then(function(id){
-            z.widget.grid.click('CDFILIAL', unidade, id);
-            z.component.footer.clickRightActionByLabel('Ok');
-        });//promise
-        //informa a loja que utiliza daypart
-        z.field.fieldFunctions.click('CDLOJA');
-        //recebe id do grid presente dentro do popup e seleciona a linha do grid que contem a loja
-        var idGrid = funcoes.getIdGrid().then(function(id){
-            z.widget.grid.click('CDLOJA', loja, id);
-            z.component.footer.clickRightActionByLabel('Ok');
-        });//promise
-        //informa a data inicial e data final para filtrar a exibição do daypart
-        z.field.fieldFunctions.click('DTPERIODO');
-        z.field.calendar.clickDate(dataInicial, 'pt_br');
-        z.field.calendar.clickDate(dataFinal, 'pt_br');
+class vendasDayPartCon {
+
+    limparFiltro() {
+        //apagar os dados nos campos do formulário
+        z.component.footer.clickCenterActionByIcon('close-x');
+    };
+
+    selecionarUnidade(...unidade) {
+        // Seleciona uma unidade no filtro
+        let fieldName = 'CDFILIAL';
+        let columnName = 'NMFILIAL';
+
+        z.field.selectMultiple.click(fieldName, columnName, unidade); 
+    };
+    
+    selecionarLoja(...loja) {
+        // Seleciona uma loja no filtro
+        let fieldName = 'CDLOJA';
+        let columnName = 'NMLOJA';
+
+        z.field.selectMultiple.click(fieldName, columnName, loja);
+    };
+
+    selecionarPeríodo(periodo) {
+        // Seleciona um período no filtro
+        let arrayDatas = periodo.split(' - ');
+        h.selectIntervalDate('DTPERIODO', arrayDatas[0], arrayDatas[1]);
         z.component.footer.clickRightActionByLabel('OK');
-        //
-        z.field.fieldFunctions.fill('HRINI', horaInicial);
-        //
-        z.field.fieldFunctions.fill('HRFIN', horaFinal);
-        //confirma a opção de filtrar relatório
-        z.component.footer.clickRightActionByLabel('Filtro');
+    };
+
+    selecionarHoraIni(hora) {
+        z.field.fieldFunctions.fill('HRINI', hora);
+    }
+
+    selecionarHoraFin(hora) {
+        z.field.fieldFunctions.fill('HRFIN', hora);
+    }
+
+    emitirRelatorio() {
+        z.component.footer.clickRightActionByLabel('Filtrar');
+    };
+
+    async gridPossuiRegistros() {
+        //verifica se o grid está sem registros ou se foi preenchido com informações
         browser.sleep(5000);
-        //verifica se o grid está sem registros ou se foi preenchido com as informações do daypart
-        return funcoes.gridSemRegistros(funcoes.getIdGrid()).then(function(semRegistro){
-            if(semRegistro)
-                //caso os dados do relatório não seja exibidos
-                return false;
+        return (!await h.gridSemRegistros(await h.getIdGrid()));
+    };
+    
+    gerarRelatorioPDF(){
+        let reportURL;
+        let screenURL;
+        
+        //gera o pdf se houver registros no grid, senão retorna a mensagem de que grid está sem registros
+        return this.gridPossuiRegistros().then(function(temRegistros){
+            if(temRegistros){    
+                screenURL = browser.getCurrentUrl();
+
+                z.externalComponent.report.openReportAction();
+                z.externalComponent.report.clickGeneratePDF();
+                browser.sleep(10000);
+                          
+                browser.driver.getAllWindowHandles().then(function(windows){
+                    browser.ignoreSynchronization = true;
+                    let initialWindowsQntd = windows.length;
+                    if (typeof windows !== 'undefined' &&
+                        windows.length > 1) {
+                        browser.driver.switchTo().window(windows[1]);
+                        reportURL = z.externalComponent.report.getPdfReportUrl();
+                        z.externalComponent.report.closePdfReport();
+                    }
+                    browser.ignoreSynchronization = false;
+                });
+      
+                return !(screenURL === reportURL);
+            }
             else
-                //caso os dados do relatório seja exibidos
-                return true;
+                return h.mensagemGrid();
         });
     };
+
+    gerarRelatorioXLS(){
+        z.externalComponent.report.generateXLSReport();
+        return z.externalComponent.report.isXlsReportSuccessfull();     
+    };
+
+    gerarRelatorioCSV(){
+        h.generateCSVReport();
+        return h.isCsvReportSuccessfull();
+    };
 };
-module.exports = new vendasDayPart();
+module.exports = new vendasDayPartCon();

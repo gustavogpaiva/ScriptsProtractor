@@ -1,42 +1,28 @@
-var ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
-var z = new ZeedhiAPIConstructor(browser, protractor);
+const ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
+const z  = new ZeedhiAPIConstructor(browser, protractor);
+const j  = require('../../../../../json/leitorJson.po.js');
+const h  = require('../../../../../page-objects/helper.po.js');
 
+class itensCancelados {
 
-var itensCancelados = function () {
+    async emitirRelatorio() {
+        let arrayDatas = j.getValor('periodoComVenda').split(' - ');
 
-    var self = this;
+        //$('#CDFILIAL > div > span > span').click();
+        //seleciona unidade no filtro
+        h.selectMultipleClick('CDFILIAL', 'NMFILIAL', [j.getValor('filial')]);
+        //Seleciona uma loja no filtro
+        h.selectMultipleClick('NMLOJA_V', 'NMLOJA', [j.getValor('nomeAlteracaoCadLoja')]);
+        //Seleciona um caixa no filtro
+        h.selectMultipleClick('CDCAIXA', 'NMCAIXA', [j.getValor('nmcaixa')]);
+        //Seleciona um caixa no filtro
+        h.selectMultipleClick('CDCLIENTE', 'NMRAZSOCCLIE', [j.getValor('cliente')]);
+   
+        h.selectIntervalDate('DTENTRVENDA', arrayDatas[0], arrayDatas[1]);
+        z.component.footer.clickRightActionByLabel('OK');
 
-    this.cancelaItensPer = function () {
-
-        z.field.fieldFunctions.click('CDFILIAL');
-        z.widget.grid.click('NMFILIAL', 'TEKNISA FOOD HOUSE', '9999');
-        z.component.footer.clickRightActionByLabel('Ok');
-
-        z.field.fieldFunctions.click('NMLOJA_V');
-        z.widget.grid.checkAllRows('9999');
-        z.component.alert.clickButton('Sim');
-        z.component.footer.clickRightActionByLabel('Ok');
-
-        z.field.fieldFunctions.click('CDCAIXA');
-        z.widget.grid.checkAllRows('9999');
-        z.component.footer.clickRightActionByLabel('Ok');
-
-        z.field.fieldFunctions.click('CDCLIENTE');
-        z.widget.grid.checkAllRows('9999');
-        z.component.footer.clickRightActionByLabel('Ok');
-
-        z.field.fieldFunctions.click('CDCONSUMIDOR');
-        z.widget.grid.checkAllRows('9999');
-        z.component.footer.clickRightActionByLabel('Ok');
-
-        z.field.fieldFunctions.click('CDVENDEDOR');
-        z.widget.grid.checkAllRows('9999');
-        z.component.footer.clickRightActionByLabel('Ok');
-
-        z.field.calendar.selectIntervalDate('DTENTRVENDA', '17/12/2017', '17/07/2018', 'pt_br');
-
-        z.component.footer.clickRightActionByLabel('Relatório');
-        browser.sleep(7000);
+        z.component.footer.clickRightActionByLabel('Gerar Relatório');
+        return await h.relBirtTest(); 
     };
 };
 module.exports = new itensCancelados();

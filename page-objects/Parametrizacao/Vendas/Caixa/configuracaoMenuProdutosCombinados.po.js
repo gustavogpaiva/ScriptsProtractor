@@ -9,7 +9,7 @@ var configuraMenu = function () {
     
     this.adicionar = function () {
         z.field.fieldFunctions.click('NMFILIAL');
-        h.pesquisaItem('NMFILIAL', j.getValor('filial'));
+        h.autoComplete('NMFILIAL', j.getValor('filial'));
         //clica no botão Filtrar
         element(by.css('#footer > div.zh-footer-right > ul > li > a > span')).click();
         //obtem o id do grid

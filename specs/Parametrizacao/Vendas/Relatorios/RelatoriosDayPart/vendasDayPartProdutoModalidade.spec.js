@@ -1,23 +1,35 @@
-var ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
-var z = new ZeedhiAPIConstructor(browser, protractor);
-var dayPart = require('../../../../../page-objects/Parametrizacao/Vendas/Relatorios/RelatoriosDayPart/vendasDayPartProdutoModalidade.po.js');
-var loginPage = require('../../../../../page-objects/login.po.js');
-var funcoes = require('../../../../../page-objects/helper.po.js');
+const dayPart = require('../../../../../page-objects/Parametrizacao/Vendas/Relatorios/RelatoriosDayPart/vendasDayPartProdutoModalidade.po.js');
+const loginPage = require('../../../../../page-objects/login.po.js');
+const h = require('../../../../../page-objects/helper.po.js');
+const j  = require('../../../../../json/leitorJson.po.js');
 
-describe('Testes da tela Vendas Day Part (Produto por Modalidade)', function(){
+describe('Testes da tela Vendas Day Part (Produto por Modalidade)', () => {
 	//executa o login do sistema
-	beforeAll(function(){
+	beforeAll(() => {
 		loginPage.login();
-        funcoes.tela('Day Part (Produto por Modalidade)');
-		//browser.get(browser.params.applicationUrl+'/man/#/man#reports%2Fvnd03102_relDaypartProdutoModalidade');
+        h.tela('Day Part (Produto por Modalidade)');
 	});
-	afterAll(function(){
-		funcoes.fechaTela();
-		funcoes.sairDoSistema();
-	});
-    //emite o relatório de daypart por produto das modalidades
-    it('Emite DayPart (Produto por Modalidade)', function(){
-        expect(dayPart.modalidade('0001','01/01/2018', '30/06/2018', 'todos')).toBe(true);
-    });
 
+	afterAll(() => h.sairDoSistema());
+
+    //emite o relatório de daypart por produto das modalidades
+	it('Emite DayPart (Produto por Modalidade)', () => {
+		//limpa a informações do filtro
+		dayPart.limparFiltro();
+        //remove os labels de campo obrigatórios para conseguir selecionar a unidade, modalidade e o período
+        dayPart.selecionarUnidade(j.getValor('filial'));
+		dayPart.selecionarModalidade('Balcão', 'Comanda', 'Delivery', 'Mesa', 'Terminal de Auto-Atendimento');
+		browser.executeScript("$('div.zh-validation').remove();");
+		dayPart.selecionarPeríodo(j.getValor('periodoComVenda'));
+		dayPart.selecionarProdInicial(j.getValor('produtoInicialcadLoja'));
+		dayPart.selecionarProdFinal(j.getValor('produtoFinalcadLoja'));
+		//emite o relatório com as informações inseridas no filtro
+		dayPart.emitirRelatorio();
+		//verifica se após emitir o relatório o grid possui registros
+        expect(dayPart.gridPossuiRegistros()).toBe(true);
+	});
+
+	it('Gerar relatório em PDF', () => expect(dayPart.gerarRelatorioPDF()).toBe(true));
+    it('Gerar relatório em XLS', () => expect(dayPart.gerarRelatorioXLS()).toBe(true));
+    it('Gerar relatório em CSV', () => expect(dayPart.gerarRelatorioCSV()).toBe(true));
 });

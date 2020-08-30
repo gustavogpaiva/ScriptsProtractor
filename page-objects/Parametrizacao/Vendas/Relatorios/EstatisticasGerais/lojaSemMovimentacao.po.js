@@ -67,7 +67,7 @@ var lojaSemMovimentacao = function(){
 		   	   (await z.widget.grid.getText(idGrid, 0, 3)).indexOf(cidade) >= 0){
 		   	   	
 		   	   	//converte dia mes ano inicial e separa nas variaveis
-		   	   	var diaInicial  = parseInt(diaMesAnoInicial[0]);
+		   	   	var diaInicial = parseInt(diaMesAnoInicial[0]);
 		   	   	var mesInicial = parseInt(diaMesAnoInicial[1]);
 		   	   	var anoInicial = parseInt(diaMesAnoInicial[2]);
 

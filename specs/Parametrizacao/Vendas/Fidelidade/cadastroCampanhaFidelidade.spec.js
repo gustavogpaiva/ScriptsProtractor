@@ -7,17 +7,23 @@ var h = require('../../../../page-objects/helper.po.js');
 describe('Testes da tela Cadastro de Campanha de Fidelidade ', function () {
 
     
-    beforeEach(function () {
+    beforeAll(function () {
         loginPage.login();
         h.tela('Cadastro de Campanhas Fidelidade');
     });
  
-    afterEach(function () {
+    afterAll(function () {
         h.sairDoSistema();
     });
+    afterAll(function () {
+        h.fechaTela();
+    });
 
-    it('Cadastro Camapanha de Fidelidade', function () {
-        fidelidade.cadastro();
+    it('Cadastro Campanha de Fidelidade', function () {
+        fidelidade.aplicaFilto('');
+        z.component.footer.clickRightActionByLabel('Filtrar');
+        z.component.footer.clickCenterActionByLabel('Adicionar');
+        fidelidade.cadastroCampanha();
         fidelidade.completaCadastro();
     });
 

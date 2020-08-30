@@ -1,26 +1,45 @@
-var ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
-var z = new ZeedhiAPIConstructor(browser, protractor);
-var j = require('../../../../../json/leitorJson.po.js');
-var h = require('../../../../../page-objects/helper.po.js');
-var moment = require('moment');
+const ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
+const z = new ZeedhiAPIConstructor(browser, protractor);
+const h  = require('../../../../../page-objects/helper.po.js');
 
-var fecharCaixa = function () {
+class relfechamentoCaixa {
+        
+    selecionarUnidade(...unidade) {
+        let fieldName = 'CDFILIAL';
+        let columnName = 'NMFILIAL';
+        $('#CDFILIAL > div > span > span').click();
+        z.field.selectMultiple.click(fieldName, columnName, unidade);
+    };
     
-    var self = this;
-    var today = moment().format('DD/MM/YYYY');
-    var lastYear = moment(today, 'DD/MM/YYYY').subtract(1, "y").format('DD/MM/YYYY');
+    selecionarLoja(...loja) {
+        let fieldName = 'CDLOJA';
+        let columnName = 'NMLOJA';
+       
+        z.field.selectMultiple.click(fieldName, columnName, loja);
+    };  
+
+    selecionarCaixa(...caixa) {
+        let fieldName = 'CDCAIXA';
+        let columnName = 'NMCAIXA';
+
+        z.field.selectMultiple.click(fieldName, columnName, caixa);
+    };    
     
-    this.fechaCaixa = async function () {
-        z.field.selectNative.click('TIPORELATORIO', 'Controle');
-        // z.field.fieldFunctions.click('CDFILIAL');
-        $$('#CDFILIAL').click();
-        // z.widget.grid.click('NMFILIAL',j.getValor('filial'), '9999', true);
-        z.component.footer.clickRightActionByLabel('Ok');
-        z.field.fieldFunctions.click('CDLOJA');
-        z.widget.grid.click('NMLOJA',j.getValor('loja'), '9999', true);
-        z.component.footer.clickRightActionByLabel('Ok');
-        z.field.calendar.selectIntervalDate('DTENTRVENDA', lastYear, today, 'pt_br');
-        z.component.footer.clickRightActionByLabel('Relatório');
+    selecionarPeriodo(periodo) {
+        let arrayDatas = periodo.split(' - ');
+
+        h.selectIntervalDate('DTENTRVENDA', arrayDatas[0], arrayDatas[1]);
+        z.component.footer.clickRightActionByLabel('OK');
+    };        
+
+    selecionarTipoRelatorio(tipoRelatorio = 'Controle') {
+        z.field.selectNative.click('TIPORELATORIO', tipoRelatorio);
+    };
+
+    emitirRelatorio() {
+        z.component.footer.clickRightActionByLabel('Gerar Relatório');
+        return h.relBirtTest();
     };      
 };
-module.exports = new fecharCaixa();
+
+module.exports = new relfechamentoCaixa();

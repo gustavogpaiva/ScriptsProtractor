@@ -22,17 +22,17 @@ describe('Testes da tela Delivery', function () {
     });
 
     it('Parâmetros da Unidade', function(){
-        expect(delivery.unidade(j.getValor('cliente'), j.getValor('cdvendedor'), '5', '10,00', '20,00', '6')).toContain('Registros Salvos com Sucesso');
+        expect(delivery.unidade(j.getValor('cdfilial'), j.getValor('cliente'), j.getValor('cdvendedor'), '5', '10,00', '20,00', '6')).toContain('Registros Salvos com Sucesso');
     });
 
     it('Cadastrar Área de atendimento', function(){
         expect(delivery.cadastrarAtendimento(j.getValor('area'), j.getValor('area'), '01800', '02359', '32241390')).toContain('Operação realizada com sucesso');
     });
 
-    it('Parâmetros da loja', function(){
-        expect(delivery.deliveryTempo(j.getValor('filial'), j.getValor('loja'), '2000', '1000')).toContain('Operação realizada com sucesso.');
-        expect(delivery.horarioAgendamento('01300', '01800')).toContain('Operação realizada com sucesso.');
-        expect(delivery.horarioFuncionamento('01800', '02359')).toContain('Operação realizada com sucesso.');
+    it('Parâmetros da loja', async function(){
+        expect(await delivery.deliveryTempo(j.getValor('cdfilial'), j.getValor('loja'), '2000', '1000')).toContain('Operação realizada com sucesso.');
+        expect(await delivery.horarioAgendamento('01300', '01800')).toContain('Operação realizada com sucesso.');
+        expect(await delivery.horarioFuncionamento('01800', '02359')).toContain('Operação realizada com sucesso.');
     });
 
     it('Parâmetros de bloqueio de cartões', function(){
@@ -42,5 +42,4 @@ describe('Testes da tela Delivery', function () {
     it('Parâmetros da Área de atendimento', function(){
         expect(delivery.atendimento(j.getValor('area'), j.getValor('prioridadeDLV'), j.getValor('taxaEntrega'))).toContain('Operação realizada com sucesso.');
     });
-
 });

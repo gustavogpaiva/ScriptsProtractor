@@ -10,33 +10,34 @@ var manutencaoConta = function () {
     var self = this;
     var today = moment().format('DD/MM/YYYY');
     
-    this.contaManutencao = function () {
-        z.field.fieldFunctions.click('NMRAZSOCCLIE');
-        z.externalComponent.selectAutocomplete.waitDropdown('NMRAZSOCCLIE');
-        z.externalComponent.selectAutocomplete.selectOption('NMRAZSOCCLIE', '00001 | CLIENTE PADRÃO');
-        /*
-        z.widget.grid.click('NMRAZSOCCLIE', j.getValor('cliente'), '0'); usar quando tirar o autocomplete da tela
-        */
-        
-        z.field.fieldFunctions.click('NMCONSUMIDOR');
-        z.externalComponent.selectAutocomplete.waitDropdown('NMCONSUMIDOR');
-        z.externalComponent.selectAutocomplete.selectOption('NMCONSUMIDOR', '011 | Teste');
-        /*
-        z.widget.grid.click('NMCONSUMIDOR', j.getValor('nomeConsumidor'), '0'); usar quando tirar o autocomplete da tela
-        */
-        
-        z.field.fieldFunctions.click('DTMOVCLI');
-        z.field.calendar.clickDate(today, 'pt_br');
-        z.component.footer.clickRightActionByLabel('Filtro');
-        z.component.footer.clickCenterActionByLabel('Adicionar');
-        z.field.selectNative.click('IDTIPMOCVLI', 'Crédito');
-        z.field.fieldFunctions.fill('VRMOVCLI', '2000');
-        z.component.footer.clickRightActionByLabel('Salvar');
-        z.component.footer.clickCenterActionByLabel('Adicionar');
-        z.field.selectNative.click('IDTIPMOCVLI', 'Débito');
-        z.field.fieldFunctions.fill('VRMOVCLI', '2000');
-        z.component.footer.clickRightActionByLabel('Salvar');
-        return h.notificacao();
+    this.edicaoConta = function(tipoMov, observacao){
+        z.widget.grid.rowExists('IDTIPMOCVLI', tipoMov , '1808152546374891958309').then(function(existeCliente){
+            if (existeCliente) {
+                z.widget.grid.click('IDTIPMOCVLI', tipoMov , '1808152546374891958309')
+                z.component.footer.clickCenterActionByLabel('Editar');
+                z.field.fieldFunctions.fill('DSATUMOVCLIE', observacao);
+            }
+        })
+    };
+    this.filtroTela = function(cliente, consumidor){
+        z.component.popup.isOpened().then(function(existePopup){
+            if(existePopup){
+                z.field.fieldFunctions.click('NMRAZSOCCLIE');
+                var inputPesquisa = element.all(by.css('div.floating-card-input > input'));
+                inputPesquisa.get(1).sendKeys(cliente);
+                z.widget.grid.click('NMRAZSOCCLIE', cliente, '9009');
+                z.field.fieldFunctions.click('NMCONSUMIDOR');
+                var inputPesquisa = element.all(by.css('div.floating-card-input > input'));
+                inputPesquisa.get(1).sendKeys(consumidor);
+                z.widget.grid.click('NMCONSUMIDOR', consumidor, '9009');
+                //Função para alteração de data no formato scroll não encontrado
+            }
+        })
+    };
+    this.manutencaoConta = function(tipoMov, valor){
+        z.component.footer.clickCenterActionByLabel('Adicionar')
+        z.field.selectNative.click ('IDTIPMOCVLI', tipoMov); 
+        z.field.fieldFunctions.fill('VRMOVCLI',valor);
     };
 };
 module.exports = new manutencaoConta();

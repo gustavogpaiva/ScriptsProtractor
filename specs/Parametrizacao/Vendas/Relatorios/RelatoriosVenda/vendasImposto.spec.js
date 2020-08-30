@@ -1,22 +1,35 @@
-var ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
-var z = new ZeedhiAPIConstructor(browser, protractor);
-var loginPage = require('../../../../../page-objects/login.po.js');
-var vendas = require('../../../../../page-objects/Parametrizacao/Vendas/Relatorios/RelatoriosVenda/vendasImposto.po.js');
-var h = require('../../../../../page-objects/helper.po.js');
+const loginPage = require('../../../../../page-objects/login.po.js');
+const vendas = require('../../../../../page-objects/Parametrizacao/Vendas/Relatorios/RelatoriosVenda/vendasImposto.po.js');
+const h = require('../../../../../page-objects/helper.po.js');
+const j  = require('../../../../../json/leitorJson.po.js');
 
-describe('Testes da Tela Vendas por Imposto', function () {
+describe('Testes da Tela Vendas por Imposto', () => {
     
     //executa o login o sistema
-    beforeEach(function () {
+    beforeAll(() => {
         loginPage.login();
         h.tela('Vendas Por Imposto');
     });
         
-    afterEach(function () {
-        h.sairDoSistema();       
-    });
+    afterAll(() => h.sairDoSistema());
     
-    it('Vendas por Imposto', function () {
-        vendas.vendasFiscal();
-    });   
+    it('Vendas por Imposto', () => {
+        
+        vendas.limparFiltro();
+
+        vendas.selecionarRelatorio('Imposto por Produto (Total Imposto)');
+        vendas.selecionarUnidade(j.getValor('filial'));
+        vendas.selecionarCaixa(j.getValor('nmcaixa'));
+        vendas.selecionarImposto('Imposto Circ. Merc. Servicos');
+        browser.executeScript("$('div.zh-validation').remove();");
+        vendas.selecionarPeríodo(j.getValor('periodoComVenda'));
+
+        vendas.emitirRelatorio();
+
+        expect(vendas.gridPossuiRegistros()).toBe(true);
+    });  
+    
+    it('Gerar relatório em PDF', () => expect(vendas.gerarRelatorioPDF()).toBe(true));
+    it('Gerar relatório em XLS', () => expect(vendas.gerarRelatorioXLS()).toBe(true));
+    it('Gerar relatório em CSV', () => expect(vendas.gerarRelatorioCSV()).toBe(true));
 });

@@ -2,17 +2,27 @@ var ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
 var z = new ZeedhiAPIConstructor(browser, protractor);
 var h = require('../../../../page-objects/helper.po.js');
 var j = require('../../../../json/leitorJson.po.js');
-var moment = require('moment');
 
 var consumidor = function () {
     var self = this;
-
-    this.cadastroConsumidor = async function () {
+    //filtra o cliente existente com os consumidores cadastrados
+    this.filtrarCliente = async function(){
         browser.sleep(5000);
         if(await z.component.popup.isOpened()){
-            h.pesquisaItem('NMRAZSOCCLIE',j.getValor('cliente'));
+            h.autoComplete('NMRAZSOCCLIE', j.getValor('cliente'));
             z.component.footer.clickRightActionByLabel('Filtrar');
         }
+    };
+    //verifica se o consumidor existe no grid
+    this.verificarConsumidor = async function(){
+        browser.sleep(5000);
+        if(await z.widget.grid.rowExists('CDCONSUMIDOR', '000000000000000000032', '1228597376813998833507'))
+            return true;
+        else
+            return false;
+    };
+
+    this.cadastroConsumidor = async function () {
         z.component.footer.clickCenterActionByLabel('Adicionar');
         z.field.fieldFunctions.fill('CDCONSUMIDOR', '32');
         z.field.fieldFunctions.fill('CDIDCONSUMID', 'clienteOdhen');
@@ -23,29 +33,30 @@ var consumidor = function () {
 
         z.field.fieldFunctions.fill('DSEMAILCONS', 'teste@teste.com');
         h.selectNative('IDTPVENDACONS', 'Todos');
-        h.pesquisaItem('NMTIPOCONS', j.getValor('tipoConsumidor'));
-        h.pesquisaItem('NMCCUSCLIE', j.getValor('centroCusto'));
+        h.autoComplete('NMTIPOCONS', j.getValor('tipoConsumidor'));
+        h.autoComplete('NMCCUSCLIE', j.getValor('centroCusto'));
         
         z.component.footer.clickRightActionByLabel('Salvar');
 
-        //caso exiba um alerta informando que o consumidor exista
+        //verifica se existe algum campo obrigatório não preenchido
+        if(await h.campoObrigatorio())
+            return 'Campos obrigatórios não foram preenchidos.';
+        
+        //caso exiba um alerta recebe sua mensagem e cancela o cadastro
         browser.sleep(5000);
-        if(await z.component.alert.isVisible()){
-            var alerta = z.component.alert.getText();
-            z.component.alert.clickButton('OK');
+        var alerta = await h.alertaDeErro();
+        if(alerta){
             z.component.footer.clickLeftActionByLabel('Cancelar');
             return alerta;
         }
-
+        
         //senão obtem a mensagem de confirmação do cadastro do consumidor
         else{
             z.component.footer.clickLeftActionByLabel('Voltar');
-            if(await z.widget.grid.rowExists('CDCONSUMIDOR','000000000000000000032','1228597376813998833507')){
-                return true;
-            }            
-            else{
+            if(await z.widget.grid.rowExists('CDCONSUMIDOR','000000000000000000032','1228597376813998833507'))
+                return true;         
+            else
                 return false;
-            }
         }    
     };
 
@@ -54,9 +65,7 @@ var consumidor = function () {
     };
 
     this.dadosResponsavel = async function () {
-        browser.sleep(5000);
-        //verifica se o consumidor existe no grid
-        if(await z.widget.grid.rowExists('CDCONSUMIDOR', '000000000000000000032', '1228597376813998833507')){
+        if(await self.verificarConsumidor()){
             z.widget.grid.click('CDCONSUMIDOR', '000000000000000000032', '1228597376813998833507');
             h.navegar('Dados do Responsável');
             if(await z.util.elementExists(by.css('a.ng-binding'))){
@@ -92,132 +101,145 @@ var consumidor = function () {
                 }
             }
         }
-        else{
+        else
             return 'O consumidor não foi cadastrado.';
-        }
     };
     //aba de endereços com defeito no grid 22/08/18, issue aberta 155137
     this.enderecos = async function(){
-        browser.sleep(5000);
-        h.navegar('Endereço');
-        z.component.footer.clickCenterActionByLabel('Editar');
-        
-        h.pesquisaItem('NMPAIS', 'Brasil');
-        //se o campo do pais não foi selecionado com o valor cancela a edição e retorna para o erro para o spec
-        if(!await z.util.elementExists(by.css('#NMPAIS > span.value'))){
-            //z.component.footer.clickLeftActionByLabel('Cancelar');
-            element(by.css('#footer > div.zh-footer-left > ul > li:nth-child(1) > a > span.zh-footer-title-sprit.ng-binding')).click();
-            return 'Não foi possível selecionar o país.';
-        }
+        if(await self.verificarConsumidor()){
+            z.widget.grid.click('CDCONSUMIDOR', '000000000000000000032', '1228597376813998833507');
+            h.navegar('Endereço');
+            z.component.footer.clickCenterActionByLabel('Editar');
+            
+            h.autoComplete('NMPAIS', 'Brasil');
+            //se o campo do pais não foi selecionado com o valor cancela a edição e retorna o erro para o spec
+            if(!await z.util.elementExists(by.css('#NMPAIS > span.value'))){
+                //z.component.footer.clickLeftActionByLabel('Cancelar');
+                element(by.css('#footer > div.zh-footer-left > ul > li:nth-child(1) > a > span.zh-footer-title-sprit.ng-binding')).click();
+                return 'Não foi possível selecionar o país.';
+            }
 
-        h.pesquisaItem('NMESTADO', 'MINAS GERAIS');
-        //se o campo do estado não foi selecionado com o valor cancela a edição e retorna para o erro para o spec
-        if(!await z.util.elementExists(by.css('#NMESTADO > span.value'))){
-            z.component.footer.clickLeftActionByLabel('Cancelar');
-            return 'Não foi possível selecionar o estado.';
-        }
-        
-        h.pesquisaItem('NMMUNICIO', 'BELO HORIZONTE');
-        //se o campo do municipio não foi selecionado com o valor cancela a edição e retorna para o erro para o spec
-        if(!await z.util.elementExists(by.css('#NMMUNICIO > span.value'))){
-            z.component.footer.clickLeftActionByLabel('Cancelar');
-            return 'Não foi possível selecionar o muncipio.';
-        }
+            h.autoComplete('NMESTADO', 'MINAS GERAIS');
+            //se o campo do estado não foi selecionado com o valor cancela a edição e retorna o erro para o spec
+            if(!await z.util.elementExists(by.css('#NMESTADO > span.value'))){
+                z.component.footer.clickLeftActionByLabel('Cancelar');
+                return 'Não foi possível selecionar o estado.';
+            }
+            
+            h.autoComplete('NMMUNICIO', 'BELO HORIZONTE');
+            //se o campo do municipio não foi selecionado com o valor cancela a edição e retorna o erro para o spec
+            if(!await z.util.elementExists(by.css('#NMMUNICIO > span.value'))){
+                z.component.footer.clickLeftActionByLabel('Cancelar');
+                return 'Não foi possível selecionar o muncipio.';
+            }
 
-        h.pesquisaItem('NMBAIRRO', 'FUNCIONARIOS');
-        //se o campo do municipio não foi selecionado com o valor cancela a edição e retorna para o erro para o spec
-        if(!await z.util.elementExists(by.css('#NMBAIRRO > span.value'))){
-            z.component.footer.clickLeftActionByLabel('Cancelar');
-            return 'Não foi possível selecionar o bairro.';
+            h.autoComplete('NMBAIRRO', 'FUNCIONARIOS');
+            //se o campo do municipio não foi selecionado com o valor cancela a edição e retorna o erro para o spec
+            if(!await z.util.elementExists(by.css('#NMBAIRRO > span.value'))){
+                z.component.footer.clickLeftActionByLabel('Cancelar');
+                return 'Não foi possível selecionar o bairro.';
+            }
+
+            z.field.fieldFunctions.fill('NRCEPCONS','30130151');
+            z.field.fieldFunctions.fill('DSENDECONS','Rua Pernambuco');
+            z.field.fieldFunctions.fill('NRTELECONS','3121222300');
+            z.field.fieldFunctions.fill('NRRAMAL1CONS','999');
+            z.field.fieldFunctions.fill('NRCELULARCONS','3199999999');
+            
+            z.component.footer.clickRightActionByLabel('Salvar');
+
+            return true;
         }
-
-        z.field.fieldFunctions.fill('NRCEPCONS','30130151');
-        z.field.fieldFunctions.fill('DSENDECONS','Rua Pernambuco');
-        z.field.fieldFunctions.fill('NRTELECONS','3121222300');
-        z.field.fieldFunctions.fill('NRRAMAL1CONS','999');
-        z.field.fieldFunctions.fill('NRCELULARCONS','3199999999');
-        
-        z.component.footer.clickRightActionByLabel('Salvar');
-
-        return true;
+        else
+            return 'O consumidor não foi cadastrado.';
     };
 
     this.parametros = async function(){
-        browser.sleep(5000);
-        h.navegar('Parâmetros');
-        z.component.footer.clickCenterActionByLabel('Editar');
-        //Permite Consumo de Produto Extra
-        h.selectNative('IDPERCONSPRODEX', 'Sim');
-        //Permite Consumo no Lanche da Manhã
-        h.selectNative('IDTPSELMANHA', 'Sim');
-        //Permite Consumo no Lanche da Tarde
-        h.selectNative('IDTPSELTARDE', 'Sim');
-        //Permite Consumo no Almoço
-        h.selectNative('IDTPSEALMOCO', 'Sim');
-        //Atualiza CPF do Cadastro de Consumidor Durante a venda
-        h.selectNative('IDATUCPFCONS', 'Sim');
-        //Imprime CPF
-        h.selectNative('IDIMPCPFCUPOM', 'Sim');
-        //Cadastro Confirmado
-        h.selectNative('IDCADCONFLIBCON', 'Sim');
-        z.component.footer.clickRightActionByLabel('Salvar');
+        if(await self.verificarConsumidor()){
+            z.widget.grid.click('CDCONSUMIDOR', '000000000000000000032', '1228597376813998833507');
+            h.navegar('Parâmetros');
+            z.component.footer.clickCenterActionByLabel('Editar');
+            //Permite Consumo de Produto Extra
+            h.selectNative('IDPERCONSPRODEX', 'Sim');
+            //Permite Consumo no Lanche da Manhã
+            h.selectNative('IDTPSELMANHA', 'Sim');
+            //Permite Consumo no Lanche da Tarde
+            h.selectNative('IDTPSELTARDE', 'Sim');
+            //Permite Consumo no Almoço
+            h.selectNative('IDTPSEALMOCO', 'Sim');
+            //Atualiza CPF do Cadastro de Consumidor Durante a venda
+            h.selectNative('IDATUCPFCONS', 'Sim');
+            //Imprime CPF
+            h.selectNative('IDIMPCPFCUPOM', 'Sim');
+            //Cadastro Confirmado
+            h.selectNative('IDCADCONFLIBCON', 'Sim');
+            z.component.footer.clickRightActionByLabel('Salvar');
 
-        return true;
+            return true;
+        }
+        else
+            return 'O consumidor não foi cadastrado.';
     };
 
     this.saldo = async function(){
-        browser.sleep(5000);
-        h.navegar('Saldo');
-        z.component.footer.clickCenterActionByLabel('Editar');
-        //Verificar saldo do Consumidor
-        z.field.selectNative.click('IDVERSALDCON', 'Sim');
-        z.field.fieldFunctions.fill('VRAVIDEBCONS', '5');
-        z.field.fieldFunctions.fill('VRLIMDEBCONS', '0');
-        z.field.fieldFunctions.fill('VRMAXDEBCONS', '200');
-        z.field.fieldFunctions.fill('VRSUBSBASICO', '200');
-        //venda crédito pessoal
-        z.field.fieldFunctions.fill('VRAVICREDCONS', '20');
-        z.field.fieldFunctions.fill('VRLIMCREDCONS', '10');
-        z.field.fieldFunctions.fill('VRMAXCREDCONS', '200');
-        z.field.fieldFunctions.fill('VRMESUBCONS', '800');
-        z.field.fieldFunctions.fill('VRPESUBCONS', '6');
-        z.component.footer.clickRightActionByLabel('Salvar');
-        
-        return true;
+        if(await self.verificarConsumidor()){
+            z.widget.grid.click('CDCONSUMIDOR', '000000000000000000032', '1228597376813998833507');
+            h.navegar('Saldo');
+            z.component.footer.clickCenterActionByLabel('Editar');
+            //Verificar saldo do Consumidor
+            z.field.selectNative.click('IDVERSALDCON', 'Sim');
+            z.field.fieldFunctions.fill('VRAVIDEBCONS', '5');
+            z.field.fieldFunctions.fill('VRLIMDEBCONS', '0');
+            z.field.fieldFunctions.fill('VRMAXDEBCONS', '200');
+            z.field.fieldFunctions.fill('VRSUBSBASICO', '200');
+            //venda crédito pessoal
+            z.field.fieldFunctions.fill('VRAVICREDCONS', '20');
+            z.field.fieldFunctions.fill('VRLIMCREDCONS', '10');
+            z.field.fieldFunctions.fill('VRMAXCREDCONS', '200');
+            z.field.fieldFunctions.fill('VRMESUBCONS', '800');
+            z.field.fieldFunctions.fill('VRPESUBCONS', '6');
+            z.component.footer.clickRightActionByLabel('Salvar');
+            if(await h.aguardaMensagem())
+                return true;
+            else
+                return false;
+        }
+        else
+            return 'O consumidor não foi cadastrado.';
     };
 
     this.unidadesAssociadas = async function(){
-        browser.sleep(5000);
-        h.navegar('Unidades Associadas');
-        if(!await z.widget.grid.rowExists('CDFILIAL', j.getValor('cdfilial'), '287528518515278363276316831636')){
-            console.log('adiciona unidade');
-            z.component.footer.clickCenterActionByLabel('Adicionar');
-            if(await z.widget.grid.rowExists('CDFILIAL', j.getValor('cdfilial'), '63362527252175812818713637')){
-                console.log('adiciona unidade do cliente');
-                z.widget.grid.checkRowByValue('CDFILIAL', j.getValor('cdfilial'), '63362527252175812818713637');
-                z.component.footer.clickRightActionByLabel('Adicionar');     
-                z.component.footer.clickLeftActionByLabel('Voltar');
-                return true;
+        if(await self.verificarConsumidor()){
+            z.widget.grid.click('CDCONSUMIDOR', '000000000000000000032', '1228597376813998833507');
+            browser.sleep(5000);
+            h.navegar('Unidades Associadas');
+            if(!await z.widget.grid.rowExists('CDFILIAL', j.getValor('cdfilial'), '287528518515278363276316831636')){
+                console.log('adiciona unidade');
+                z.component.footer.clickCenterActionByLabel('Adicionar');
+                if(await z.widget.grid.rowExists('CDFILIAL', j.getValor('cdfilial'), '63362527252175812818713637')){
+                    console.log('adiciona unidade do cliente');
+                    z.widget.grid.checkRowByValue('CDFILIAL', j.getValor('cdfilial'), '63362527252175812818713637');
+                    z.component.footer.clickRightActionByLabel('Adicionar');     
+                    z.component.footer.clickLeftActionByLabel('Voltar');
+                    return true;
+                }
+                else{
+                    z.component.footer.clickLeftActionByLabel('Voltar');
+                    z.component.footer.clickLeftActionByLabel('Voltar');
+                    return 'Unidade não está associada ao cliente.';
+                }
             }
             else{
                 z.component.footer.clickLeftActionByLabel('Voltar');
-                z.component.footer.clickLeftActionByLabel('Voltar');
-                return 'Unidade não está associada ao cliente.';
+                return 'Unidade já foi associada ao consumidor.';
             }
         }
-        else{
-            z.component.footer.clickLeftActionByLabel('Voltar');
-            return 'Unidade já foi associada ao consumidor.';
-        }
+        else
+            return 'O consumidor não foi cadastrado.';
     };
 
     this.editarConsumidor = async function(){
-        if(await z.component.popup.isOpened()){
-            h.pesquisaItem('NMRAZSOCCLIE',j.getValor('cliente'));
-            z.component.footer.clickRightActionByLabel('Filtrar');
-        }
-
-        if(await z.widget.grid.rowExists('CDCONSUMIDOR', '000000000000000000032', '1228597376813998833507')){
+        if(await self.verificarConsumidor()){
             z.widget.grid.click('CDCONSUMIDOR', '000000000000000000032', '1228597376813998833507');
             z.component.footer.clickCenterActionByLabel('Editar');
             z.field.fieldFunctions.fill('CDIDCONSUMID', 'Editei aqui');
@@ -253,116 +275,132 @@ var consumidor = function () {
             }
 
             h.selectNative('IDTPVENDACONS', '1 - Venda Débito Consumidor');
-            h.pesquisaItem('NMTIPOCONS', 'PADRÃO');
+            h.autoComplete('NMTIPOCONS', 'PADRÃO');
             z.component.footer.clickRightActionByLabel('Salvar');    
         }
-        else{
+        else
             return 'O consumidor não foi cadastrado.';
-        }
         
         return true;
     };
 
     this.editarDadosReponsavel = async function() {
-        h.navegar('Dados do Responsável');
-        z.component.footer.clickCenterActionByLabel('Editar');
-        z.field.fieldFunctions.fill('NMRESPCONS', 'teste de edição');
-        
-        //verifica se o cpf foi informado e se é válido
-        element(by.css('#NRCPFRESPCON')).clear();
-        browser.sleep(2000);
-        if(await z.component.alert.isVisible())
-            z.component.alert.clickButton('OK');
-        //z.field.fieldFunctions.fill('NRCPFRESPCON', '001234567890');
-        var elementos = element.all(by.id('NRCPFRESPCON'));
-        elementos.each(function (el) {
-            el.isDisplayed().then(function (displayed) {
-                if (displayed) {
-                    try {
-                        el.sendKeys('001234567890');
-                    } catch (erro) {
-                        console.log(erro);
+        if(await self.verificarConsumidor()){
+            z.widget.grid.click('CDCONSUMIDOR', '000000000000000000032', '1228597376813998833507');
+            h.navegar('Dados do Responsável');
+            z.component.footer.clickCenterActionByLabel('Editar');
+            z.field.fieldFunctions.fill('NMRESPCONS', 'teste de edição');
+            
+            //verifica se o cpf foi informado e se é válido
+            element(by.css('#NRCPFRESPCON')).clear();
+            browser.sleep(2000);
+            if(await z.component.alert.isVisible())
+                z.component.alert.clickButton('OK');
+            //z.field.fieldFunctions.fill('NRCPFRESPCON', '001234567890');
+            var elementos = element.all(by.id('NRCPFRESPCON'));
+            elementos.each(function (el) {
+                el.isDisplayed().then(function (displayed) {
+                    if (displayed) {
+                        try {
+                            el.sendKeys('001234567890');
+                        } catch (erro) {
+                            console.log(erro);
+                        }
                     }
-                }
-            })
-        });
+                })
+            });
 
-        //retorna para o spec a mensagem que o cpf é inválido
-        browser.sleep(2000);
-        if(await z.component.alert.isVisible()){
-            var alerta = await z.component.alert.getText();
-            z.component.alert.clickButton('OK');
-            z.component.footer.clickLeftActionByLabel('Cancelar');
-            return alerta;
-        }
-        //insere demais informações do responsável
-        else{
-            z.field.fieldFunctions.fill('NRRGCONSUMID', '00000000');
-        }
+            //retorna para o spec a mensagem que o cpf é inválido
+            browser.sleep(2000);
+            if(await z.component.alert.isVisible()){
+                var alerta = await z.component.alert.getText();
+                z.component.alert.clickButton('OK');
+                z.component.footer.clickLeftActionByLabel('Cancelar');
+                return alerta;
+            }
+            //insere demais informações do responsável
+            else{
+                z.field.fieldFunctions.fill('NRRGCONSUMID', '00000000');
+            }
 
-        z.component.footer.clickRightActionByLabel('Salvar');
-        
-        return true;
+            z.component.footer.clickRightActionByLabel('Salvar');
+            
+            return true;
+        }
+        else
+            return 'O consumidor não foi cadastrado.';
     };
 
     this.editarParametros = async function(){
-        h.navegar('Parâmetros');
-        z.component.footer.clickCenterActionByLabel('Editar');
-        //Permite Consumo de Produto Extra
-        h.selectNative('IDPERCONSPRODEX', 'Não');
-        //Permite Consumo no Lanche da Manhã
-        h.selectNative('IDTPSELMANHA', 'Não');
-        //Permite Consumo no Lanche da Tarde
-        h.selectNative('IDTPSELTARDE', 'Não');
-        //Permite Consumo no Almoço
-        h.selectNative('IDTPSEALMOCO', 'Não');
-        //Atualiza CPF do Cadastro de Consumidor Durante a venda
-        h.selectNative('IDATUCPFCONS', 'Não');
-        //Imprime CPF
-        h.selectNative('IDIMPCPFCUPOM', 'Não');
-        //Cadastro Confirmado
-        h.selectNative('IDCADCONFLIBCON', 'Não');
-        z.component.footer.clickRightActionByLabel('Salvar');
+        if(await self.verificarConsumidor()){
+            z.widget.grid.click('CDCONSUMIDOR', '000000000000000000032', '1228597376813998833507');
+            h.navegar('Parâmetros');
+            z.component.footer.clickCenterActionByLabel('Editar');
+            //Permite Consumo de Produto Extra
+            h.selectNative('IDPERCONSPRODEX', 'Não');
+            //Permite Consumo no Lanche da Manhã
+            h.selectNative('IDTPSELMANHA', 'Não');
+            //Permite Consumo no Lanche da Tarde
+            h.selectNative('IDTPSELTARDE', 'Não');
+            //Permite Consumo no Almoço
+            h.selectNative('IDTPSEALMOCO', 'Não');
+            //Atualiza CPF do Cadastro de Consumidor Durante a venda
+            h.selectNative('IDATUCPFCONS', 'Não');
+            //Imprime CPF
+            h.selectNative('IDIMPCPFCUPOM', 'Não');
+            //Cadastro Confirmado
+            h.selectNative('IDCADCONFLIBCON', 'Não');
+            z.component.footer.clickRightActionByLabel('Salvar');
 
-        return true;
+            return true;
+        }
+        else
+            return 'O consumidor não foi cadastrado.';
     };
 
     this.editarSaldo = async function(){
-        h.navegar('Saldo');
-        z.component.footer.clickCenterActionByLabel('Editar');
-        //Verificar saldo do Consumidor
-        z.field.selectNative.click('IDVERSALDCON', 'Não');
-        z.component.footer.clickRightActionByLabel('Salvar');
-        
-        return true;
+        if(await self.verificarConsumidor()){
+            z.widget.grid.click('CDCONSUMIDOR', '000000000000000000032', '1228597376813998833507');
+            h.navegar('Saldo');
+            z.component.footer.clickCenterActionByLabel('Editar');
+            //Verificar saldo do Consumidor
+            z.field.selectNative.click('IDVERSALDCON', 'Não');
+            z.component.footer.clickRightActionByLabel('Salvar');
+            
+            return true;
+        }
+        else
+            return 'O consumidor não foi cadastrado.';
     };
     //adiciona uma segunda unidade ao consumidor
     this.editarUnidadesAssociadas = async function(){
-        h.navegar('Unidades Associadas');
-        if(!await z.widget.grid.rowExists('CDFILIAL', j.getValor('cdfilial2'), '287528518515278363276316831636')){
-            z.component.footer.clickCenterActionByLabel('Adicionar');
-            if(await z.widget.grid.rowExists('CDFILIAL', j.getValor('cdfilial2'), '63362527252175812818713637')){
-                z.widget.grid.checkRowByValue('CDFILIAL', j.getValor('cdfilial2'), '63362527252175812818713637');
-                z.component.footer.clickRightActionByLabel('Adicionar');     
+        if(await self.verificarConsumidor()){
+            z.widget.grid.click('CDCONSUMIDOR', '000000000000000000032', '1228597376813998833507');
+            h.navegar('Unidades Associadas');
+            if(!await z.widget.grid.rowExists('CDFILIAL', j.getValor('cdfilial2'), '287528518515278363276316831636')){
+                z.component.footer.clickCenterActionByLabel('Adicionar');
+                if(await z.widget.grid.rowExists('CDFILIAL', j.getValor('cdfilial2'), '63362527252175812818713637')){
+                    z.widget.grid.checkRowByValue('CDFILIAL', j.getValor('cdfilial2'), '63362527252175812818713637');
+                    z.component.footer.clickRightActionByLabel('Adicionar');     
+                }
+                else{
+                    return 'Unidade não está associada ao cliente.';
+                }
             }
             else{
-                return 'Unidade não está associada ao cliente.';
+                return 'Unidade já foi associada ao consumidor.';
             }
+
+            return true;
         }
-        else{
-            return 'Unidade já foi associada ao consumidor.';
-        }
-        
-        return true;
+        else
+            return 'O consumidor não foi cadastrado.';
     };
 
     this.alteracaoAutomatica = async function(){
-        if(await z.component.popup.isOpened()){
-            h.pesquisaItem('NMRAZSOCCLIE',j.getValor('cliente'));
-            z.component.footer.clickRightActionByLabel('Filtrar');
-        }
-        
-        z.component.footer.clickRightActionByLabel('Alteração Automática');       
+        browser.sleep(5000);        
+        z.component.footer.clickRightActionByLabel('Ações');
+        element(by.css('#popup > span > section > section > section > div > div > ul > li:nth-child(1) > div > div > span')).click();
         
         z.field.fieldFunctions.click('CDCLIENTE');
         if(!await h.gridSemRegistros('9999')){
@@ -437,7 +475,7 @@ var consumidor = function () {
         //Alterar Tipo de Consumidor
         z.field.selectNative.click('ENABLE_CDTIPOCONS', 'Sim');
         
-        h.pesquisaItem('NMTIPOCONS', 'PADRÃO');
+        h.autoComplete('NMTIPOCONS', 'PADRÃO');
         //se o campo do tipo de consumidor não foi selecionado com o valor cancela a edição e retorna para o erro para o spec
         if(!await z.util.elementExists(by.css('#NMTIPOCONS > span.value'))){
             z.component.footer.clickLeftActionByLabel('Cancelar');
@@ -457,12 +495,7 @@ var consumidor = function () {
     };
 
     this.excluir = async function(){
-        if(await z.component.popup.isOpened()){
-            h.pesquisaItem('NMRAZSOCCLIE',j.getValor('cliente'));
-            z.component.footer.clickRightActionByLabel('Filtrar');
-        }
-        
-        if(await z.widget.grid.rowExists('CDCONSUMIDOR', '000000000000000000032', '1228597376813998833507')){
+        if(await self.verificarConsumidor()){
             z.widget.grid.click('CDCONSUMIDOR', '000000000000000000032', '1228597376813998833507');
             h.navegar('Unidades Associadas');
             if(!await h.gridSemRegistros('287528518515278363276316831636')){
@@ -473,20 +506,15 @@ var consumidor = function () {
             h.navegar('Formulário');
             z.component.footer.clickCenterActionByLabel('Excluir');    
         }
+        else
+            return 'O consumidor não foi cadastrado.';
         
         return true;
     };
 
     this.excluirComRegistroFilho = async function(){
         browser.sleep(5000);
-        var open = await z.component.popup.isOpened();
-        console.log('popup aberto : '+open);
-        if(open){
-            h.pesquisaItem('NMRAZSOCCLIE',j.getValor('cliente'));
-            z.component.footer.clickRightActionByLabel('Filtrar');
-        }
-
-        if(await z.widget.grid.rowExists('CDCONSUMIDOR', '000000000000000000032', '1228597376813998833507')){
+        if(await self.verificarConsumidor()){
             z.widget.grid.click('CDCONSUMIDOR', '000000000000000000032', '1228597376813998833507');
             z.component.footer.clickCenterActionByLabel('Excluir');
         }

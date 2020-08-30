@@ -8,14 +8,14 @@ describe('Testes da tela Abertura de Caixa', function () {
     // esse teste executa a abertura e o fechamento de caixa. não separar essas duas suites
     beforeEach(function () {
         loginPage.login();
-        
+        h.tela('Abertura de Caixa');
     });
     
     afterEach(function () {
         h.sairDoSistema();
     });
     
-    fit('Abrir Caixa', function () {
+    it('Abrir Caixa', function () {
         h.tela('Abertura de Caixa');
         expect(abertura.caixa()).toContain('Caixa '+ j.getValor('nmcaixa')+ ' aberto com sucesso!');
     });

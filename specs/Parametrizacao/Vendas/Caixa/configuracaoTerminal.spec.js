@@ -11,6 +11,10 @@ describe('Testes da tela Configuração Terminal de Caixa', function () {
         h.tela('Configuração de Terminal de Caixa');
     });
 
+    beforeEach(function () {
+        configuracaoTerminal.filtrarConfiguracao();
+    });
+
     afterAll(function () {
         h.sairDoSistema();
     });

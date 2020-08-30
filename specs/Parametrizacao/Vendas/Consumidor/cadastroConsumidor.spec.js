@@ -11,9 +11,17 @@ describe('Testes da tela Cadastro Consumidor', function () {
         h.tela('Cadastro de Consumidor');
     });
 
-    /*afterAll(function () {
+    beforeEach(function () {
+        consumidor.filtrarCliente();
+    });
+
+    afterEach(function () {
+        h.fechaTela();
+    });
+
+    afterAll(function () {
         h.sairDoSistema();
-    });*/
+    });
 
     it('Cadastra um novo consumidor', function() {
         expect(consumidor.cadastroConsumidor()).toBe(true);
@@ -52,6 +60,6 @@ describe('Testes da tela Cadastro Consumidor', function () {
     });
 
     it('Exclusão de Consumidor', function() {
-        expect(consumidor.excluir()).toContain('Registros Deletados');
+        expect(consumidor.excluir()).toBe(true);
     });
 });

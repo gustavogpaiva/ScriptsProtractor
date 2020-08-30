@@ -1,25 +1,31 @@
 var ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
 var z = new ZeedhiAPIConstructor(browser, protractor);
 var h = require('../../../../page-objects/helper.po.js');
-var j = require('../../../../json/leitorJson.po.js');
-
 
 var meta = function () {
     var self = this;
 
-    this.realizarMeta = function () {
-        z.widget.grid.click('NMFILIAL', j.getValor('filial'), '3638210602126535070274');
+    this.selecionarUnidade = function(filial){
+        h.getIdGrid().then(function(idGrid){
+            z.widget.grid.rowExists('NMFILIAL', filial, idGrid).then(function(existeUnidade){
+                if(existeUnidade)
+                    z.widget.grid.click('NMFILIAL', filial, idGrid);
+            });    
+        });
+    };
+
+    this.metaEspecial = function(periodo, percentual){
         h.navegar('Meta Período Especial');
         z.component.footer.clickCenterActionByLabel('Adicionar');
-        z.field.calendar.selectIntervalDate('PERIODO', '01/08/2018', '04/08/2018', 'pt_br');
-        z.field.fieldFunctions.fill('DSMETAESP', 'Teste de inserção');
-        z.field.fieldFunctions.fill('PERCCORRECAO', '10');
+        var arrayDatas = periodo.split(' - ');
+        h.selectIntervalDate('PERIODO', arrayDatas[0], arrayDatas[1]);
+        z.component.footer.clickRightActionByLabel('OK');
+        z.field.fieldFunctions.fill('DSMETAESP', 'Meta da semana');
+        z.field.fieldFunctions.fill('PERCCORRECAO', percentual);
         z.component.footer.clickRightActionByLabel('Salvar');
-        z.component.footer.clickLeftActionByLabel('Voltar');
     };
 
     this.editarMetaEspecial = function () {
-        z.widget.grid.click('NMFILIAL', j.getValor('filial'), '3638210602126535070274');
         h.navegar('Meta Período Especial');
         z.widget.grid.click('NMDIA', 'QUARTA-FEIRA', '3638210602585623398331');
         z.component.footer.clickCenterActionByLabel('Editar');
@@ -29,100 +35,174 @@ var meta = function () {
     };
 
     this.excluirMetaEspecial = function () {
-        z.widget.grid.click('NMFILIAL', j.getValor('filial'), '3638210602126535070274');
         h.navegar('Meta Período Especial');
-        //exclui o primeiro registro
-        z.widget.grid.click('NMDIA', 'QUARTA-FEIRA', '3638210602585623398331');
-        z.component.footer.clickCenterActionByLabel('Excluir');
-        z.component.alert.clickMessageOk();
-        //exclui o segundo registro
-        z.widget.grid.click('NMDIA', 'QUINTA-FEIRA', '3638210602585623398331');
-        z.component.footer.clickCenterActionByLabel('Excluir');
-        z.component.alert.clickMessageOk();
-        //exclui o terceiro registro
-        z.widget.grid.click('NMDIA', 'SEXTA-FEIRA', '3638210602585623398331');
-        z.component.footer.clickCenterActionByLabel('Excluir');
-        z.component.alert.clickMessageOk();
-        //exclui o quarto registro
-        z.widget.grid.click('NMDIA', 'SÁBADO', '3638210602585623398331');
-        z.component.footer.clickCenterActionByLabel('Excluir');
-        return h.retornaMensagem();
-    };
-
-    this.metaMensal = async function () {
-        z.widget.grid.click('NMFILIAL', j.getValor('filial'), '3638210602126535070274');
-        z.component.footer.clickRightActionByLabel('Ações');
-        var el = element(by.css('#popup > span > section > section > section > div > div > ul > li:nth-child(1) > div > div > span'));
-        el.click();
-        //loop para buscar todos 'id' PERCENTUAL e tentar inserir um valor em input
-        var elementos = element.all(by.name('PERCENTUAL'));
-        elementos.each(function (el) {
-            el.isDisplayed().then(function (displayed) {
-                if (displayed) {
-                    try {
-                        el.sendKeys('10');
-                    } catch (err) {
-                        console.log(err);
-                    }
-                }
-            })
-        });
-
-        z.component.footer.clickRightActionByLabel('Estimar Meta');
-        z.component.footer.clickLeftActionByLabel('Cancelar');
-        h.navegar('Meta por Mês');
-        z.widget.grid.click('CDMES', 'Janeiro', '3638210603645353162275');
-        z.component.footer.clickCenterActionByLabel('Editar');
-        z.field.fieldFunctions.fill('VRMES', '1000000');
-        z.component.footer.clickRightActionByLabel('Salvar');
-        h.navegar('Meta por Dia da Semana');
-        browser.sleep('2000');
-        //solução temporaria para o erro que se encontra na tela por não exibir os valores
-        browser.refresh();
-        z.widget.grid.click('NMFILIAL', j.getValor('filial'), '3638210602126535070274');
-        h.navegar('Meta por Mês');
-        z.widget.grid.click('CDMES', 'Janeiro', '3638210603645353162275');
-        h.navegar('Meta por Dia da Semana');
-        z.component.footer.clickLeftActionByLabel('Voltar');
-        h.navegar('Meta por Mês');
-        //z.component.footer.clickRightActionByLabel('Salvar alterações');
-    };
-
-    this.atualizaVendas = function () {
-        z.component.footer.clickRightActionByLabel('Ações');
-        var atualiza = element.all(by.css('#popup > span > section > section > section > div > div > ul > li:nth-child(1)'));
-        atualiza.click();
-        var msg = element(by.css('span.notification-message-text.ng-binding'));
-        //função para pegar notificação
-        var notifica = msg.isDisplayed().then(function (visivel) {
-            if (visivel) {
-                return msg.getText().then(function (texto) {
-                    console.log('msg = ' + texto);
-                    return texto;
+        h.gridSemRegistros('3638210602585623398331').then(function(semRegistros){
+            if(semRegistros)
+                h.mensagemGrid();
+            else{
+                h.getIdGrid().then(function(idGrid){
+                    z.widget.grid.checkAllRows(idGrid);
+                    z.component.footer.clickCenterActionByLabel('Excluir');
+                    //aguarda o alerta ficar visivel e clica na opção Sim
+                    z.component.alert.isVisible().then(function(alertaVisivel){
+                        if(alertaVisivel)
+                            z.component.alert.clickButton('Sim');
+                    });
                 });
             }
         });
-        z.component.footer.clickLeftActionByLabel('Cancelar');
-        return notifica;
+    };
+
+    this.metaMensal = function (percentual, periodo, ano) {
+        z.component.footer.clickRightActionByLabel('Ações');
+        h.selectAction('Estimar meta');
+        h.click('input#PERCENTUAL.input-text.mousetrap.zh-field-PERCENTUAL.zh-text-align-right.ng-valid-maxlength');
+        $$('input#PERCENTUAL.input-text.mousetrap.zh-field-PERCENTUAL.zh-text-align-right.ng-valid-maxlength').get(1).sendKeys(percentual);
+        var arrayDatas = periodo.split(' - ');
+        //arrayDatas[0] = data inicial, arrayDatas[1] = data final
+        h.selectIntervalDate('PERIODOMETA', arrayDatas[0], arrayDatas[1]);
+        z.component.footer.clickRightActionByLabel('OK');
+        z.component.footer.clickRightActionByLabel('Estimar Meta');
+    };
+
+    this.editarMetaMensal = function (mes, valor) {
+        h.navegar('Meta por Mês');
+        return h.getIdGrid().then(function(idGrid){
+            return z.widget.grid.rowExists('CDMES', mes, idGrid).then(function(existeMes){
+                if(existeMes){
+                    z.widget.grid.click('CDMES', mes, idGrid);
+                    z.component.footer.clickCenterActionByLabel('Editar');
+                    z.field.fieldFunctions.fill('VRMES', valor);
+                    z.component.footer.clickRightActionByLabel('Salvar');
+                    return true;
+                }
+                else
+                    return 'A meta para o mês '+ mes +' não existe no grid.';
+            });
+        });
+    };
+
+    this.editarMetaDiaSemana = function(mes, percentual){
+        h.navegar('Meta por Mês');
+        return z.widget.grid.rowExists('CDMES', mes, '3638210603645353162275').then(function(existeMes){
+            if(existeMes){
+                z.widget.grid.click('CDMES', mes, '3638210603645353162275');
+                h.navegar('Meta por Dia da Semana');
+                return h.gridSemRegistros('3638210601640353379295').then(function(semRegistros){
+                    if(semRegistros)
+                        return h.mensagemGrid();
+                    else{
+                        h.editInlineFieldValue(percentual, 0, 1, '3638210601640353379295');
+                        z.component.footer.clickRightActionByLabel('Salvar alterações');
+                        return h.notificacao().then(function(notificacaoVisivel){
+                            return notificacaoVisivel ? true : false;
+                        });
+                    }
+                });
+            }      
+            else
+                return 'A meta para o mês '+ mes +' não existe no grid.';
+        });
+    };
+
+    this.editarMetaModalidade = function(mes, percentual){
+        h.navegar('Meta por Mês');
+        return z.widget.grid.rowExists('CDMES', mes, '3638210603645353162275').then(function(existeMes){
+            if(existeMes){
+                z.widget.grid.click('CDMES', mes, '3638210603645353162275');
+                h.navegar('Meta por Dia da Semana');
+                return h.gridSemRegistros('3638210601640353379295').then(function(semRegistros){
+                    if(semRegistros)
+                        return h.mensagemGrid();
+                    else{
+                        z.widget.grid.clickColumn('3638210601640353379295', 0, 0);
+                        h.navegar('Meta por Modalidade');
+                        return h.gridSemRegistros('3638210601239997428313').then(function(semRegistros){
+                            if(semRegistros)
+                                return h.mensagemGrid();
+                            else{
+                                h.editInlineFieldValue(percentual, 0, 2, '3638210601239997428313');
+                                z.component.footer.clickRightActionByLabel('Salvar alterações');
+                                return h.notificacao().then(function(notificacaoVisivel){
+                                    return notificacaoVisivel ? true : false;
+                                });
+                            }
+                        });
+                    }                        
+                });
+            }
+            else
+                return 'A meta para o mês '+ mes +' não existe no grid.';                 
+        });
+    };
+
+    this.editarMetaHora = function(mes, percentual){
+        h.navegar('Meta por Mês');
+        return z.widget.grid.rowExists('CDMES', mes, '3638210603645353162275').then(function(existeMes){
+            if(existeMes){
+                z.widget.grid.click('CDMES', mes, '3638210603645353162275');
+                h.navegar('Meta por Dia da Semana');
+                return h.gridSemRegistros('3638210601640353379295').then(function(semRegistros){
+                    if(semRegistros)
+                        return h.mensagemGrid();
+                    else{
+                        z.widget.grid.clickColumn('3638210601640353379295', 0, 0);
+                        h.navegar('Meta por Hora');
+                        return h.gridSemRegistros('3638210602983286253349').then(function(semRegistros){
+                            if(semRegistros)
+                                return h.mensagemGrid();
+                            else{
+                                h.editInlineFieldValue(percentual, 0, 1, '3638210602983286253349');
+                                z.component.footer.clickRightActionByLabel('Salvar alterações');
+                                return h.notificacao().then(function(notificacaoVisivel){
+                                    if(notificacaoVisivel){
+                                        $('span.notification-message-icon').click();
+                                        return true;
+                                    }
+                                    else
+                                        return false;
+                                });
+                            }
+                        });
+                    }                        
+                });
+            }
+            else
+                return 'A meta para o mês '+ mes +' não existe no grid.';                 
+        });
+    };
+
+    this.verificarMetasMesDia = function(){
+        h.navegar('Meta por Mês/Dia');
+        return h.gridSemRegistros('3638210601640353379295').then(function(semRegistros){
+            if(semRegistros)
+                return h.mensagemGrid();
+            else
+                return true;
+        });
+    };
+
+    this.verificarMetaEspecial = function(){
+        h.navegar('Meta Período Especial');
+        return h.gridSemRegistros('3638210602585623398331').then(function(semRegistros){
+            if(semRegistros)
+                return h.mensagemGrid();
+            else
+                return true;
+        });
+    };
+
+    this.atualizarVendas = function () {
+        z.component.footer.clickLeftActionByLabel('Voltar');
+        z.component.footer.clickRightActionByLabel('Ações');
+        h.selectAction('Atualizar Vendas');
     };
 
     this.recalculaMeta = function () {
+        z.component.footer.clickLeftActionByLabel('Voltar');
         z.component.footer.clickRightActionByLabel('Ações');
-        var el = element(by.css('#popup > span > section > section > section > div > div > ul > li:nth-child(3)'));
-        el.click();
+        h.selectAction('Recalcular meta');
         z.component.alert.clickButton('Sim');
-        var el2 = element(by.css('span.notification-message-text.ng-binding'));
-        var notificacao = el2.isDisplayed().then(function (banana) {
-            if (banana) {
-                return el2.getText().then(function (txt) {
-                    console.log('msg = ' + txt);
-                    return txt;
-                });
-            };
-
-        });
-        z.component.footer.clickLeftActionByLabel('Cancelar');
-        return notificacao;
     };
 };
 module.exports = new meta();

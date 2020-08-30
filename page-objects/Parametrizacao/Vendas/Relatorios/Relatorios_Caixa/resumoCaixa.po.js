@@ -1,81 +1,36 @@
-var ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
-var z = new ZeedhiAPIConstructor(browser, protractor);
-var j = require('../../../../../json/leitorJson.po.js');
-var h = require('../../../../../page-objects/helper.po.js');
-var moment = require('moment');
+const ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
+const z = new ZeedhiAPIConstructor(browser, protractor);
+const j = require('../../../../../json/leitorJson.po.js');
+const h = require('../../../../../page-objects/helper.po.js');
+const moment = require('moment');
 
-var resumoCaixa = function () {
-    
-    var self = this;
-    var today = moment().format('DD/MM/YYYY');
-    var past2months = moment(today, 'DD/MM/YYYY').subtract(2, "m").format('DD/MM/YYYY');
-    
-    this.resCaixaRMC = function () {
-        z.field.selectNative.click('__report_name', 'Resumo da Movimentação do Caixa (RMC)');
-        //    unidade setada automaticamente
-        z.field.fieldFunctions.click('CDLOJA');
+class resumoCaixa {
+       
+    async emitirRelatorio(tipo) {
+
+        const tipoRel = {
+            caixaRMC        : 'Resumo da Movimentação do Caixa (RMC)',
+            caixaRFC        : 'Comparativo Fechamento Caixa (RFC)',
+            caixaRfcNFCSAT  : 'Comparativo Fechamento Caixa (RFC - NFC-e/SAT)',
+            caixaRmcNFCESAT : 'Resumo da Movimentação do Caixa (RMC - NFCe/SAT)'
+        };
+
+        let arrayDatas = j.getValor('periodoComVenda').split(' - ');
+
+        z.field.selectNative.click('__report_name', tipoRel[tipo]);
+        // unidade
+        h.selectMultipleClick('CDFILIAL', 'NMFILIAL', [j.getValor('filial')]);
         // loja
-        z.widget.grid.click('NMLOJA', j.getValor('loja'), '9999', true);
-        z.component.footer.clickRightActionByLabel('Ok'); 
-        // caixa
-        z.field.fieldFunctions.click('CDCAIXA');
-        z.widget.grid.click('NMCAIXA', j.getValor('nmcaixa'), '9999',true);
-        z.component.footer.clickRightActionByLabel('Ok');
+        h.selectMultipleClick('CDLOJA', 'NMLOJA', [j.getValor('nomeAlteracaoCadLoja')]);
+        // Seleciona um caixa no filtro
+        h.selectMultipleClick('CDCAIXA', 'NMCAIXA', [j.getValor('nmcaixa')]);
         // data
-        z.field.calendar.selectIntervalDate('DTENTRVENDA', past2months, today, 'pt_br');
-        // possui abertura de caixa após a data mas não é campo obrigatório
-        z.component.footer.clickRightActionByLabel('Relatório'); 
+        h.selectIntervalDate('DTENTRVENDA', arrayDatas[0], arrayDatas[1]);
+        z.component.footer.clickRightActionByLabel('OK');
+
+        z.component.footer.clickRightActionByLabel('Gerar Relatório');
+        return await h.relBirtTest(); 
     };
-
-    this.resCaixaRFC = function () {
-        z.field.selectNative.click('__report_name', 'Comparativo Fechamento Caixa (RFC)');
-        //    unidade setada automaticamente
-        z.field.fieldFunctions.click('CDLOJA');
-        // loja
-        z.widget.grid.click('NMLOJA', j.getValor('loja'), '9999', true);
-        z.component.footer.clickRightActionByLabel('Ok'); 
-        // caixa
-        z.field.fieldFunctions.click('CDCAIXA');
-        z.widget.grid.click('NMCAIXA', j.getValor('nmcaixa'), '9999',true);
-        z.component.footer.clickRightActionByLabel('Ok');
-        // data
-        z.field.calendar.selectIntervalDate('DTENTRVENDA', past2months, today, 'pt_br');
-        // possui abertura de caixa após a data mas não é campo obrigatório
-        z.component.footer.clickRightActionByLabel('Relatório'); 
-    };
-
-    this.resCaixaRfcNFCSAT = function () {
-        z.field.selectNative.click('__report_name', 'Comparativo Fechamento Caixa (RFC - NFC-e/SAT)');
-        //    unidade setada automaticamente
-        z.field.fieldFunctions.click('CDLOJA');
-        // loja
-        z.widget.grid.click('NMLOJA', j.getValor('loja'), '9999', true);
-        z.component.footer.clickRightActionByLabel('Ok'); 
-        // caixa
-        z.field.fieldFunctions.click('CDCAIXA');
-        z.widget.grid.click('NMCAIXA', j.getValor('nmcaixa'), '9999',true);
-        z.component.footer.clickRightActionByLabel('Ok');
-        // data
-        z.field.calendar.selectIntervalDate('DTENTRVENDA', past2months, today, 'pt_br');
-        // possui abertura de caixa após a data mas não é campo obrigatório
-        z.component.footer.clickRightActionByLabel('Relatório'); 
-    };
-
-    this.resCaixaRmcNFCESAT = function () {
-        z.field.selectNative.click('__report_name', 'Resumo da Movimentação do Caixa (RMC - NFCe/SAT)');
-        //    unidade setada automaticamente
-        z.field.fieldFunctions.click('CDLOJA');
-        // loja
-        z.widget.grid.click('NMLOJA', j.getValor('loja'), '9999', true);
-        z.component.footer.clickRightActionByLabel('Ok'); 
-        // caixa
-        z.field.fieldFunctions.click('CDCAIXA');
-        z.widget.grid.click('NMCAIXA', j.getValor('nmcaixa'), '9999',true);
-        z.component.footer.clickRightActionByLabel('Ok');
-        // data
-        z.field.calendar.selectIntervalDate('DTENTRVENDA', past2months, today, 'pt_br');
-        // possui abertura de caixa após a data mas não é campo obrigatório
-        z.component.footer.clickRightActionByLabel('Relatório'); 
-    };   
+        
 };
 module.exports = new resumoCaixa();

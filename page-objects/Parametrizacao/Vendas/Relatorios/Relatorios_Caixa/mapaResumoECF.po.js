@@ -1,33 +1,55 @@
-var ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
-var z = new ZeedhiAPIConstructor(browser, protractor);
-var j = require('../../../../../json/leitorJson.po.js');
-var h = require('../../../../../page-objects/helper.po.js');
-var moment = require('moment');
+const ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
+const z = new ZeedhiAPIConstructor(browser, protractor);
+const h = require('../../../../../page-objects/helper.po.js');
 
-var MapResuECF = function () {
+class MapResuECF {
 
-    var self = this;
-    var today = moment().format('DD/MM/YYYY');
-    var past2months = moment(today, 'DD/MM/YYYY').subtract(2, "m").format('DD/MM/YYYY');
+    selecionarUnidade(...unidade) {
+        let fieldName = 'CDFILIAL';
+        let columnName = 'NMFILIAL';
+        $('#CDFILIAL > div > span > span').click();
+        h.selectMultipleClick(fieldName, columnName, unidade);
+    };
+    
+    selecionarLoja(...loja) {
+        let fieldName = 'CDLOJA';
+        let columnName = 'NMLOJA';
+       
+        h.selectMultipleClick(fieldName, columnName, loja);
+    };  
 
-    this.resumoECF = function () {
-        
-        z.field.selectNative.click('TIPORELATORIO', 'Minas Gerais');
-        z.field.fieldFunctions.click('CDLOJA');
-        z.widget.grid.click('NMLOJA', j.getValor('loja'), '9999', true);
-        z.component.footer.clickRightActionByLabel('Ok');
+    selecionarCaixa(...caixa) {
+        let fieldName = 'CDCAIXA';
+        let columnName = 'NMCAIXA';
 
-        z.field.fieldFunctions.click('CDCAIXA');
-        z.widget.grid.click('NMCAIXA', j.getValor('nmcaixa'), '9999', true);
-        z.component.footer.clickRightActionByLabel('Ok');
+        h.selectMultipleClick(fieldName, columnName, caixa);
+    };    
+    
+    selecionarPeriodo(periodo) {
+        let arrayDatas = periodo.split(' - ');
 
-        z.field.calendar.selectIntervalDate('DTENTRVENDA', past2months, today, 'pt_br');
-        z.component.footer.clickRightActionByLabel('Relatório');
-        // esse if é usado para quando não tem relatórios a serem gerados
-        z.component.alert.isVisible().then(function (alerta) {
-            if (alerta) {
-                z.component.alert.clickMessageOk();
-            }
+        h.selectIntervalDate('DTENTRVENDA', arrayDatas[0], arrayDatas[1]);
+        z.component.footer.clickRightActionByLabel('OK');
+    };        
+
+    selecionarTipoRelatorio(tipoRelatorio = 'São Paulo') {
+        z.field.selectNative.click('TIPORELATORIO', tipoRelatorio);
+    };
+
+    selecionarRegiao(...regiao) {
+        let fieldName = 'CDREGIAO';
+        let columnName = 'NMREGIAO';
+
+        h.selectMultipleClick(fieldName, columnName, regiao);   
+    };
+
+    emitirRelatorio() {
+        z.component.footer.clickRightActionByLabel('Gerar Relatório');
+        return h.alertaDeErro().then(function(alertaVisivel){
+            if(alertaVisivel)
+                return alertaVisivel;
+            else
+                return h.relBirtTest();
         });
     };
 };

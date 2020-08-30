@@ -2,158 +2,369 @@ var ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
 var z = new ZeedhiAPIConstructor(browser, protractor);
 var paramGerais = require('../../../../page-objects/Parametrizacao/Vendas/ParametrosGV/parametrosGerais_vnd10003.po.js');
 var loginPage = require('../../../../page-objects/login.po.js');
-var funcoes = require('../../../../page-objects/helper.po.js');
+var h = require('../../../../page-objects/helper.po.js');
+var j = require('../../../../json/leitorJson.po.js');
 
 describe('Testes da tela Parâmetros Gerais', function(){
 	//executa o login o sistema
-	beforeEach(function(){
+	beforeAll(function(){
 		loginPage.login();
-		funcoes.tela('Parâmetros Gerais');
+		h.tela('Parâmetros Gerais');
 	});
-    //sai do sistema após a execução dos it
-    afterEach(function(){
-    	//funcoes.fechaTela();
-    	funcoes.sairDoSistema();
-    });
-	/*Acessa a aba Gerais e executa os testes das telas incluidas nesta aba.
-	executa os testes de parametrização da aba Geral.
-	parâmetros: opção{Sim|Não} de cadastrar a composição, mensagem de limite de aprovação, destino da CAT52, destino dos arquivos TC, opção{Sim|Não} de utilizar tabela preço por cliente, opção{Sim|Não} de bloquear vendas de produtos sem impostos, destino dos arquivos NFCE, opção{Sim|Não} de controle de produtos e opção{Sim|Não} de pesquisar consumidores ativos.*/
-	it('Parâmetros Geral', function(){
-		expect(paramGerais.geral('Sim', 'Previsão fora do limite. Favor verificar', 'c:\\CAT-52', 'C:\\TC', 'Não', 'Sim', 'C:\\NFCE', 'Sim', 'Sim', 'Não', '466A4B11D4F34227E50FF51A6B9CA946B4871FB', '9999', '192.168.120.15', '3128')).toContain('Operação realizada com sucesso.');
+	//fecha alguma tela que ficou aberta após a execução dos it
+	afterEach(function(){
+		h.fechaTela();
 	});
-	/*executa os testes de parametrização da aba Fiscal.
-	parâmetros: diretório de geração do arquivo magnético do SINTEGRA*/
-	fit('Parâmetros Fiscal', function(){
-		expect(paramGerais.fiscal('C:\\SINTEGRA')).toContain('Operação realizada com sucesso.');
+	//sai do sistema após a execução de todos it
+	afterAll(function(){
+		h.sairDoSistema();
 	});
-	/*executa os testes de parametrização da aba Integração Site-Delivery.
-	parâmetros: código da loja e-Sitef, vendedor padrão do site Delivery, validação do atendimento do site Delivery.*/
-	it('Parâmetros Integração Site-Delivery', function(){
-		paramGerais.integraSiteDelivery('14852931000122at', 'VENDEDOR LOJA SAVASSI', 'Validação por Bairro');
+
+	/*Acessa a aba Gerais e executa os testes executa os testes de parametrização da aba Geral.*/
+	it('Parametrização da aba Geral', function(){
+		paramGerais.editarParametros('Gerais');
+		expect(paramGerais.composicaoProdutos('Sim')).toBe(true);
+		expect(paramGerais.mensagemUsuario('Previsão fora do limite. Favor verificar')).toBe(true);
+		expect(paramGerais.diretorioCat52('c:\\CAT-52')).toBe(true);
+		expect(paramGerais.diretorioTC('C:\\TC')).toBe(true);
+		expect(paramGerais.tabelaPrecoCliente('Não')).toBe(true);
+		expect(paramGerais.impostoProduto('Sim')).toBe(true);
+		expect(paramGerais.diretorioNFCE('C:\\NFCE')).toBe(true);
+		expect(paramGerais.atualizaProdutosBaseLocal('Sim')).toBe(true);
+		expect(paramGerais.cancelaProdutosProduzidos('Sim')).toBe(true);
+		expect(paramGerais.pesquisarConsumidorAtivo('Não')).toBe(true);
+		expect(paramGerais.integracaoAudTax('466A4B11D4F34227E50FF51A6B9CA946B4871FB', '9999', '192.168.120.15', '3128')).toBe(true);
+		expect(paramGerais.mensagemAutoAtendimento('Volte Sempre')).toBe(true);
+		expect(paramGerais.textoAjudaNFPaulista('CPF')).toBe(true);
+		expect(paramGerais.textoAjudaRefeicaoExtra('Adiciona Refeição')).toBe(true);
+		expect(paramGerais.recebimentoQRCode(j.getValor('tipoRecebimento'))).toBe(true);
+		expect(paramGerais.linkServidorImagens('https://midia.teknisa.com/files/')).toBe(true);
+		expect(paramGerais.gerarCodigoOperador('Sim')).toBe(true);
+		expect(paramGerais.salvarParametros()).toContain('Operação realizada com sucesso.');
 	});
-	/*executa os testes de parametrização da aba Configurações de Email. 
-	parâmetros: Servidor SMTP, porta do servidro SMTP, email para envio das mensagens, autenticação, senha do email, criptografia e email do fale conosco.*/
-	it('Parâmetros Configurações de Email', function(){
-		expect(paramGerais.configuraEmail('smtp.teknisa.com', '9090', 'teknisa@tecfood.com', 'Com Autenticação', 'teknisa', 'SSL', 'faleconosco@teknisa.com')).toBe('Operação realizada com sucesso.');
+	/*executa os testes de parametrização da aba Fiscal*/
+	it('Parametrização da aba Fiscal', function(){
+		paramGerais.editarParametros('Fiscal');
+		expect(paramGerais.gerarArquivoMagnetico('C:\\SINTEGRA')).toBe(true);
+		expect(paramGerais.salvarParametros()).toContain('Operação realizada com sucesso.');
+	});
+	/*executa os testes de parametrização da aba Integração Site-Delivery*/
+	//it('Parametrização da aba Integração Site-Delivery', function(){
+	//	paramGerais.integraSiteDelivery('14852931000122at', 'VENDEDOR LOJA SAVASSI', 'Validação por Bairro');
+	//});
+	/*executa os testes de parametrização da aba Configurações de Email*/
+	it('Parametrização da aba Configurações de Email', function(){
+		paramGerais.editarParametros('Configurações de Email');
+		expect(paramGerais.dadosSMTP('smtp.teknisa.com', '9090', 'teknisa@tecfood.com', 'Com Autenticação', 'teknisa', 'SSL')).toBe(true);
+		expect(paramGerais.dadosFaleConosco('faleconosco@teknisa.com')).toBe(true);
+		expect(paramGerais.salvarParametros()).toContain('Operação realizada com sucesso.');
+	});
+	/*executa o teste de conexão stmp da aba configuração de email*/
+	it('Teste de conexão SMTP', function(){
+		expect(paramGerais.testarSMTP(j.getValor('email'))).toContain('Operação realizada com sucesso.');
+	});
+	/*executa o teste de parametrização da aba Contrato/Termo Adesão*/
+	it('Parametrização da aba Contrato/Termo Adesão', function(){
+		paramGerais.editarParametros('Contrato/ Termo Adesão');
+		paramGerais.contratoTermoAdesao();
+		expect(paramGerais.salvarParametros()).toContain('Operação realizada com sucesso.');
 	});
 	/*Acessa a aba Produto e executa os testes das telas incluidas nesta aba.
-	executa os testes de parametrização da aba Parâmetros Gerais Produto.
-	parâmetros: nível de produto, o nome do produto, opção{Sim|Não} de pesar, opção{Sim|Não} de tara, código de barras, nome abreviado, opção{Sim|Não} de cobrar tx serviço, opção{Sim|Não} controlar refil, opção{Extra|Normal|Básico} produto deb.consumidor, grupo combinado, codigo do teclado, opção{Sim|Não} de imprimir produto, opção{Imprimir Agrupado|Imprime 1 por vez} de imprimir na produção, opção{Sim|Não} local impressão, dados fornecedor, validade, inf.adicionais, qtde porção, valor mínimo para vendas débito consumidor, opção{Grama|Mililitro|Unidade} da unidade de porção, parte inteira da medida, opção{Sem parte decimal|Parte decimal de '1/4'|Parte decimal de '1/3'|Parte decimal de '1/2'|Parte decimal de '2/3'|Parte decimal de '3/4'} parte decimal da medida, opção{Colher(es) de sopa|Colher(es) de sopa|Colher(es) de chá|Unidade(s)|Fatia(s)|Pedaço(s)}medida caseira, opção{Terceiros|Própria} tipo de produção e descrição do produto de venda.*/
-	it('Parâmetros Gerais Produto', function(){
-		expect(paramGerais.produto('REFEICAO DA SEMANA','Sim','','000001','REF.SEMANA','Sim','Não','Normal','0','1','Sim','Imprime Agrupado','Não','','','','','','Grama','','Sem parte decimal','Colher(es) de sopa','Terceiros','Refeição da semana')).toBe('Operação realizada com sucesso.');
+	executa os testes de parametrização da aba Parâmetros Gerais Produto.*/
+	it('Parametrização da aba Gerais Produto', function(){
+		//abre a aba Produto para edição dos parâmetros
+		h.navegar('Produto');
+		expect(paramGerais.filtrarProduto(j.getValor('produto'))).toBe(true);
+		paramGerais.editarParametros('Parâmetros Gerais Produto');
+		paramGerais.parametrosProduto('Sim', '', '000001', 'LANCHE', 'Sim', 'Não', 'Normal', '0', '1', 'Sim', 'Imprime Agrupado', 'Não', '', '', '', '', '', 'Grama', '', 'Sem parte decimal', 'Colher(es) de sopa', 'Terceiros', 'Opção de lanche');
+		expect(paramGerais.salvarParametros()).toBe('Operação realizada com sucesso.');
 	});
-	/*executa os testes de parametrização da tela Atualização Automática.
-	parâmetros: produto inicial, produto final, opção{Sim|Não} de pesar produto, opção{Sim|Não} de tara, valor da tara, opção{Sim|Não} de taxa de serviço, código{0..9} do grupo produto combinado, opção{Sim|Não} imprimir produto, opção{Imprime Agrupado|Imprime 1 por vez} de imprimir na produção.*/
-    it('Atualiza Produto', function(){
-    	expect(paramGerais.atualizaProduto('REFEICAO DA SEMANA','REFEICAO VEGANA','Sim','Sim','0,02','Sim','0','Sim','Imprime Agrupado')).toBe('Operação realizada com sucesso.');
-    }, );
-    /*executa os testes de parametrização da aba Percentual para Cálculo do preço do produto.
-    parâmetros: unidade, percentual, produto inicial e o produto final.*/
-	it('Percentual Cálculo Preço do Produto', function(){
-    	expect(paramGerais.calculoPrecoProduto('0001','20','REFEICAO DA SEMANA','REFEICAO VEGANA')).toBe('Operação realizada com sucesso.');
-    });
-	/*Acessa a aba Imposto do produto e executa os testes das telas incluidas nesta aba.
-	executa os testes de parametrização da aba Impostos.
-	parâmetros: sigla do imposto, tipo de imposto*/
-	it('Imposto(Tela retirada)', function(){
-    	paramGerais.imposto('ICMS', 'ICMS');
-    });
-	/*executa os testes de parametrização da aba Impostos do Produto.
-	parâmetros: unidade, nível inicial, código do produto inicial, código do produto final, código do imposto, alíquota do imposto, percentual de redução, modalidade base calculo, incide pis/cofins, alíquota ibpt(federal),alíquota ibpt(estadual), código CFOP, código CST/CSOSN, código CST(PIS/COFINS), alíquota PIS e alíquota COFINS.
-	resultados: Primeiro teste seleciona dentro do intervalo os produtos inicial e produto final para o cadastro, após salvar deve receber a mensagem 'Ok'.
-	Segundo teste seleciona dentro da lista o produto inicial e produto final para o cadastro, após salvar deve receber a mensagem 'Ok'.*/
-	it('Impostos do Produto(Tela retirada)', function(){
-		expect(paramGerais.impostoProduto('0001','1','1.01.01.000.00','1.01.12.050.01','00','18','0','','Sim','0','0','5102','40','01','0.65','3.00','intervalo')).toBe('Ok');
-		expect(paramGerais.impostoProduto('0001','1','1.01.01.000.00','1.01.12.050.01','00','18','0','','Sim','0','0','5102','40','01','0.65','3.00','lista')).toBe('Ok');
+	/*executa os testes de parametrização da tela Alteração Automática*/
+  	it('Alteração automática de produto', function(){
+  		//abre a aba Produto para edição dos parâmetros
+  		h.navegar('Produto');
+  		//filtra o produto existente da arvóres de produto e depois fecha swipe
+  		paramGerais.filtrarProduto(j.getValor('produto'));
+  		h.fechaTela();
+  		
+  		//seleciona a opção alteração automática, o intervalo de produtos e as informações a ser cadastradas
+  		paramGerais.alteracaoAutomatica();
+  		expect(paramGerais.selecionarIntervalo([j.getValor('produtoInicialcadLoja'), j.getValor('produtoFinalcadLoja')])).toBe(true);
+  		paramGerais.selecionarParametrosProdutos('Sim', 'Sim', '0,02', 'Sim', '0', 'Sim', 'Imprime Agrupado');
+  		expect(paramGerais.salvarParametros()).toBe('Operação realizada com sucesso.');
+  		
+  		//seleciona a opção alteração automática, a lista de produtos e as informações a serem cadastradas
+  		paramGerais.alteracaoAutomatica();
+  		expect(paramGerais.selecionarLista(j.getValor('produtoInicialcadLoja'))).toBe(true);
+  		expect(paramGerais.selecionarLista(j.getValor('produtoFinalcadLoja'))).toBe(true);
+  		paramGerais.selecionarParametrosProdutos('Sim', 'Sim', '0,02', 'Sim', '0', 'Sim', 'Imprime Agrupado');
+  		expect(paramGerais.salvarParametros()).toBe('Operação realizada com sucesso.');  		
+  	});
+	/*executa os testes de parametrização da aba Percentual para Cálculo do preço do produto*/
+	it('Parametrização da aba Percentual Cálculo Preço do Produto - Adicionar percentual de produto', function(){
+		//abre a aba Produto para edição dos parâmetros
+		h.navegar('Produto');
+		//filtra o produto existente da arvóres de produto e depois fecha swipe
+  		paramGerais.filtrarProduto(j.getValor('produto'));
+  		h.fechaTela();
+  		//alterna para subaba Percentual para Cálculo do preço do produto para edição dos parâmetros
+  		h.navegar('Percentual para Cálculo do Preço do Produto');
+  		//filtra a unidade existente para executar os cálculos
+  		paramGerais.filtrarUnidade(j.getValor('filial'));
+  		
+  		//adiciona um novo percentual para um intervalo de produtos
+  		paramGerais.adicionarPercentual('002');
+  		expect(paramGerais.selecionarIntervalo([j.getValor('produtoInicialcadLoja'), j.getValor('produtoFinalcadLoja')])).toBe(true);
+  		expect(paramGerais.salvarParametros()).toBe('Operação realizada com sucesso.');
+
+  		//adiciona um novo percentual para uma lista de produtos
+		paramGerais.adicionarPercentual('002');
+		expect(paramGerais.selecionarLista(j.getValor('produto2'))).toBe(true);
+  		expect(paramGerais.selecionarLista(j.getValor('produto3'))).toBe(true);
+  		expect(paramGerais.salvarParametros()).toBe('Operação realizada com sucesso.');
+  	});
+	/*executa os testes de exclusão da aba Percentual para Cálculo do preço do produto*/
+  	it('Parametrização da aba Percentual Cálculo Preço do Produto - Excluir percentual de produto', function(){
+  		//filtra e verifica se o percentual do produto foi cadastrado
+  		expect(paramGerais.filtrarProduto(j.getValor('produtoInicialcadLoja'))).toBe(true);
+  		//remove o percentual dos preços para os produtos cadastrados
+		paramGerais.excluirCalculoPrecoProduto();
+		expect(h.aguardaMensagem()).toBe('Excluído com sucesso!');
+
+		//filtra e verifica se o percentual do produto foi cadastrado
+  		expect(paramGerais.filtrarProduto(j.getValor('produtoFinalcadLoja'))).toBe(true);
+  		//remove o percentual dos preços para os produtos cadastrados
+  		paramGerais.excluirCalculoPrecoProduto();
+		expect(h.aguardaMensagem()).toBe('Excluído com sucesso!');
+
+		//filtra e verifica se o percentual do produto foi cadastrado
+  		expect(paramGerais.filtrarProduto(j.getValor('produto2'))).toBe(true);
+  		//remove o percentual dos preços para os produtos cadastrados
+		paramGerais.excluirCalculoPrecoProduto();
+		expect(h.aguardaMensagem()).toBe('Excluído com sucesso!');
+
+		//filtra e verifica se o percentual do produto foi cadastrado
+  		expect(paramGerais.filtrarProduto(j.getValor('produto3'))).toBe(true);
+  		//remove o percentual dos preços para os produtos cadastrados
+  		paramGerais.excluirCalculoPrecoProduto();
+		expect(h.aguardaMensagem()).toBe('Excluído com sucesso!');
+  	});
+	/*Acessa a aba Fidelidade e executa os testes*/
+	it('Parametrização da aba Fidelidade', function(){
+		paramGerais.editarParametros('Fidelidade');
+		paramGerais.fidelidade(j.getValor('cliente'), j.getValor('centroCusto'), j.getValor('tipoConsumidor'));
+		expect(paramGerais.salvarParametros()).toBe('Operação realizada com sucesso.');
 	});
-	/*executa os testes de exportação de impostos da aba ações.
-	parâmetros: unidade de origem, unidade de destino, produtos a ser exportados.
-	resultados: apos informar todos os produtos para exportar seus impostos, deve receber a mensagem 'Exportação realizada com sucesso!'.*/
-	it('Exportação de Impostos(Tela retirada)', function(){
-		expect(paramGerais.exportaImposto('0001','0002','todos')).toBe('Exportação realizada com sucesso!');
+	/*Acessa a aba Banco e executa os testes*/
+	it('Parametrização da aba Banco', function(){
+		//abre a aba banco, verifica se o banco está cadastrado e seleciona no grid
+		h.navegar('Banco');
+		expect(paramGerais.selecionarBanco(j.getValor('cdbanco'))).toBe(true);
+		//após selecionar o banco habilita a edição dos parâmetros
+		paramGerais.editarParametros();
+		expect(paramGerais.inscricaoBanco(j.getValor('inscricaoDoBanco'))).toBe(true);		
+		expect(paramGerais.criptografiaVendaSite(j.getValor('chaveDoBanco'))).toBe(true);		
+		expect(paramGerais.urlBancoVendaSite(j.getValor('urlDoBanco'))).toBe(true);
+		expect(paramGerais.salvarParametros()).toBe('Operação realizada com sucesso.');
 	});
-	/*Acessa a aba Fidelidade e executa os testes.
-	parâmetros: cliente fidelidade, centro de custo, tipo de consumidor.*/
-	it('Fidelidade', function(){
-		expect(paramGerais.fidelidade('ALIVITA COMERCIO DE REFEICOES', 'TEKNISA', 'CONVÊNIO')).toBe('Operação realizada com sucesso.');
+	/*Acessa a aba Cliente e executa os testes*/
+	it('Parametrização da aba Cliente', function(){
+		//abre a aba cliente e filtra a unidade
+		h.navegar('Cliente');
+		paramGerais.filtrarUnidade(j.getValor('filial'));
+		expect(paramGerais.selecionarCliente(j.getValor('cliente'))).toBe(true);
+		//aguarda abrir a tela cliente e habilita a edição dos parâmetros
+		paramGerais.editarParametros();
+		//define a tabela de preço, nome do site, se vai zerar o saldo mensal, recalculo de saldo mensal, criptografia de crachá e hora do recálculo
+		paramGerais.selecionarParametrosCliente(j.getValor('tabelaDePreco'), 'Nome Fantasia', j.getValor('zeraSaldoMensal'), 'Não', 'Não Utiliza', '12:00');
+		expect(paramGerais.salvarParametros()).toBe('Operação realizada com sucesso.');
 	});
-	/*Acessa a aba Banco e executa os testes.
-	parâmetros: código do banco, código de inscrição, chave de criptografia na transação de venda site, url de acesso do banco em resposta nas transações.*/
-	it('Banco', function(){
-		expect(paramGerais.banco('001','01051990','123654','banco.com.br')).toBe('Operação realizada com sucesso.');
-	});
-	/*Acessa a aba Cliente e executa os testes.
-	parâmetros: inscrição do cliente, tabela de preço, opção{Sim|Não} zera saldo mensalmente e opção{Nome Fantasia|Razão Social} nome da instituição.*/
-	it('Cliente', function(){
-		expect(paramGerais.cliente('0001','00001','001','Sim','Nome Fantasia')).toBe('Operação realizada com sucesso.');
+	/*Acessa a aba Cliente e parametriza as tabelas de preços*/
+	it('Parametrização da aba Cliente - Tabela de preços', function(){
+		//abre a aba cliente e filtra a unidade
+		h.navegar('Cliente');
+		paramGerais.filtrarUnidade(j.getValor('filial'));
+		expect(paramGerais.selecionarCliente(j.getValor('cliente'))).toBe(true);
+		//aguarda abrir a tela cliente e muda para aba Tabela de Preço
+		h.navegar('Tabelas de Preço');
+		//seleciona uma unidade existente que o cliente está cadastrado
+		expect(paramGerais.selecionarUnidadeCliente(j.getValor('filial'))).toBe(true);
+		//aguarda abrir a tela tabela de preço da unidade e habilita para edição dos parametros
+		paramGerais.editarParametros();
+		paramGerais.selecionarTabelaPreco(j.getValor('tabelaDePreco'));
+		expect(paramGerais.salvarParametros()).toBe('Operação realizada com sucesso.');
+		h.fechaTela();
 	});
 	/*Acessa a aba Pagamento Online e executa os testes das telas incluídas nesta aba
 	executa os testes de parametrização da aba Geral*/
-	it('Pagamento Online Geral', function(){
-		expect(paramGerais.pagOnlineGeral('Loja Teste', '14852931000122at')).toBe('Operação realizada com sucesso.');
+	it('Parametrização da aba Pagamento Online - Geral', function(){
+		//abre a aba Pagamento Online e habilita o modo de edição dos parâmetros
+		paramGerais.editarParametros('Pagamento Online');
+		expect(paramGerais.integracaoSitef(j.getValor('loja'), '14852931000122at')).toBe(true);
+		expect(paramGerais.salvarParametros()).toBe('Operação realizada com sucesso.');
 	});
 	//executa os testes de parametrização da aba Por Unidade
-	it('Pagamento Online Unidade', function(){
-		expect(paramGerais.pagOnlineUnidade('0001','Loja Savassi','01051990')).toBe('Operação realizada com sucesso.');
+	it('Parametrização da aba Pagamento Online - Unidade', function(){
+		//abre a aba Pagamento Online e muda para subaba unidade e filtra uma unidade existente
+		h.navegar('Pagamento Online');
+		h.navegar('Unidade');
+		paramGerais.filtrarUnidade(j.getValor('filial'));
+		//seleciona uma unidade existente e habilita a edição dos parâmetros
+		expect(paramGerais.selecionarUnidade(j.getValor('filial'))).toBe(true);
+		paramGerais.editarParametros();
+		//edita os parametros do pagamento online por unidade
+		paramGerais.pagOnlineUnidade(j.getValor('loja'), '01051990');
+		expect(paramGerais.salvarParametros()).toBe('Operação realizada com sucesso.');
 	});
-	/*executa os testes de parametrização da aba Bandeira e-Sitef
-	parâmetros: unidade, nome da bandeira, identificador esitef e o tipo de recebimento.
-	resultados: Primeiro teste deve informar a filial e todos os dados da nova bandeira, após salvar deve receber a mensagem 'Ok'.
-	Segundo teste deve informar a filial e todos os campos obrigatórios vazios, após salvar deve receber a mensagem 'Campo obrigatório'.*/
-	it('Banderia e-Sitef da Unidade', function(){
-		expect(paramGerais.bandeiraUnidade('0001','AMEX','004','003')).toBe('Ok');
-		funcoes.fechaTela();
-		expect(paramGerais.bandeiraUnidade('0001','','','')).toBe('Campo obrigatório');
-		funcoes.fechaTela();
+	/*executa os testes de parametrização da aba Bandeira e-Sitef*/
+	it('Parametrização da aba Banderia e-Sitef por Unidade - Inclusão de bandeiras', function(){
+		//abre a aba Pagamento Online e muda para subaba Bandeira e-Sitef
+		h.navegar('Pagamento Online');
+		h.navegar('Unidade');
+		//filtra a unidade e seleciona a aba Bandeira e-Sitef
+		paramGerais.filtrarUnidade(j.getValor('filial'));
+		expect(paramGerais.selecionarUnidade(j.getValor('filial'))).toBe(true);
+		h.click('body > span > section > section > div.default-window > section.zh-swipe-container.zh-swipe-right.open > div > div:nth-child(3) > section > header > div > div > ul > li:nth-child(2) > label > a');
+		//cadastra uma nova bandeira do eSitef da unidade
+		paramGerais.adicionarBandeiraUnidade(j.getValor('cdfilial'), j.getValor('tipoRecebimento3'), '004', j.getValor('tipoRecebimento3'));	
+		expect(paramGerais.salvarParametros()).toBe('Operação realizada com sucesso.');
+		//testa se a tela permite cadastrar bandeiras eSitef com campos obrigatórios em branco
+		paramGerais.adicionarBandeiraUnidade(j.getValor('cdfilial'), '', '', '');
+		expect(paramGerais.salvarParametros()).toBe(false);
+		expect(h.campoObrigatorio()).toBe(true);
 	});
-	/*executa os testes de parametrização da aba Bandeiras e-Sitef.
-	parâmetros: nome da bandeira, identificador do e-Sitef e tipo de recebimento.
-	resultados: Primeiro teste cadastra uma nova bandeira informando todos os dados e após salvar deve receber a mensagem 'Ok'.
-	Segundo teste cadastra uma nova bandeira sem informar os dados obrigatórios e após salvar deve receber a mensagem 'Campo obrigatório'.*/
+	it('Parametrização da aba Banderia e-Sitef por Unidade - Exclusão de bandeiras', function(){
+		//abre a aba Pagamento Online e muda para subaba Bandeira e-Sitef
+		h.navegar('Pagamento Online');
+		h.navegar('Unidade');
+		//filtra a unidade e seleciona a aba Bandeira e-Sitef
+		paramGerais.filtrarUnidade(j.getValor('filial'));
+		expect(paramGerais.selecionarUnidade(j.getValor('filial'))).toBe(true);
+		h.click('body > span > section > section > div.default-window > section.zh-swipe-container.zh-swipe-right.open > div > div:nth-child(3) > section > header > div > div > ul > li:nth-child(2) > label > a');
+		expect(paramGerais.selecionarBandeira(j.getValor('cdfilial'))).toBe(true);
+		paramGerais.excluirBandeiraUnidade();
+		expect(h.aguardaMensagem()).toBe('Excluído com sucesso!');
+	});
+	/*executa os testes de parametrização da aba Bandeiras e-Sitef*/
 	it('Bandeira e-Sitef', function(){
-		expect(paramGerais.bandeiraEsitef('Visa','003','CARTAO CREDITO')).toBe('Operação realizada com sucesso.');
-		expect(paramGerais.bandeiraEsitef('','','')).toBe('Campo obrigatório');
-		funcoes.fechaTela();
+		h.navegar('Pagamento Online');
+		h.navegar('Bandeiras e-SiTef');
+		//testa o cadastro de bandeira eSitef
+		paramGerais.adicionarBandeiraEsitef(j.getValor('tipoRecebimento3'), '003', j.getValor('tipoRecebimento3'));
+		expect(paramGerais.salvarParametros()).toBe('Operação realizada com sucesso.');
+		//testa se a tela permite cadastrar bandeira com campos em branco
+		paramGerais.adicionarBandeiraEsitef('','','');
+		expect(paramGerais.salvarParametros()).toBe(false);
+		expect(h.campoObrigatorio()).toBe(true);
 	});
 	/**/
 	it('Excluir Bandeira e-Sitef', function(){
-		expect(paramGerais.excluiBandeiraEsitef('Visa')).toBe('Deletado com sucesso.');
+		h.navegar('Pagamento Online');
+		h.navegar('Bandeiras e-SiTef');
+		expect(paramGerais.selecionarBandeira(j.getValor('tipoRecebimento3'))).toBe(true);
+		paramGerais.excluirBandeiraEsitef(j.getValor('tipoRecebimento3'));
+		expect(h.aguardaMensagem()).toBe('Excluído com sucesso!');
 	});
-	/*Acessa a aba Tipo de Consumidor e executa os testes das telas incluidas nesta aba.
-	executa os testes de parametrização da aba Tipo de Consumidor*/
+	/*Acessa a aba Tipo de Consumidor e executa os testes das telas incluidas nesta aba*/
 	it('Tipo de Consumidor', function(){
-		paramGerais.tipoConsumidor('01','S','S','N');
+		h.navegar('Tipo de Consumidor');
+		expect(paramGerais.selecionarTipoConsumidor(j.getValor('tipoConsumidor'))).toBe(true);
+		paramGerais.editarParametros();
+		expect(paramGerais.importarDadosCatraca('S')).toBe(true);
+		expect(paramGerais.tipoExtrato('S')).toBe(true);;
+		expect(paramGerais.desabilitaTeclado('N')).toBe(true);;
+		expect(paramGerais.senhaConsumidor('S')).toBe(true);;
+		expect(paramGerais.transferirSaldo('S')).toBe(true);;
+		expect(paramGerais.importarConsumidor('S')).toBe(true);
+		expect(paramGerais.salvarParametros()).toBe('Operação realizada com sucesso.');
 	});
-	/*executa os testes de parametrização da aba Tipo de Consumidor por Unidade.
-	parâmetros: código da unidade, código externo e código do tipo de consumidor.*/
+	/*executa os testes de parametrização da aba Tipo de Consumidor por Unidade*/
 	it('Tipo de Consumidor por Unidade', function(){
-		paramGerais.tipoConsumidorUnidade('0001','02','02');
+		h.navegar('Tipo de Consumidor');
+		h.navegar('Tipo de Consumidor por Unidade');
+		paramGerais.filtrarUnidade(j.getValor('filial'));
+		paramGerais.adicionarTipoConsumidorUnidade(j.getValor('codigoExterno'), j.getValor('tipoConsumidor'));
+		expect(paramGerais.salvarParametros()).toBe('Operação realizada com sucesso.');
 	});
-	/*executa os testes de parametrização da aba Tipo de consumidor por Unidade.
-	parâmetros: unidade, tipo de consumidor, opção{S|N} consultar saldo, posição{1..9} consultar saldo, opção{S|N} consultar extrato, posição{1..9} consultar extrato, opção{S|N}carregar cartão, posição{1..9} carregar cartão, opção{S|N} bloquear cartão, posição{1..9} bloquear cartão, opção{S|N} fale conosco, posição{1..9} fale conosco, opção{S|N} restrição alimentar, posição{1..9} restrição alimentar, opção{S|N}atualizar cadastro, posição{1..9} atualizar cadastro, opção{S|N} trocar senha, posição{1..9} trocar senha, opção{S|N} tabela de preço, posição{1..9} tabela de preço.*/
+	/*executa os testes de parametrização da aba Tipo de consumidor por Unidade*/
 	it('Editar Tipo de Consumidor por Unidade', function(){
-		expect(paramGerais.editaTipoConsumidorUnidade('0001','02','S','1','S','2','S','3','S','4','S','5','S','6','S','7','S','8','S','9')).toBe('Ok');
-		funcoes.fechaTela();
-		expect(paramGerais.editaTipoConsumidorUnidade('0001','02','N','1','N','2','N','3','N','4','N','1','N','6','N','7','N','8','N','9')).toBe('Ok');
-		funcoes.fechaTela();
-		expect(paramGerais.editaTipoConsumidorUnidade('0001','02','S','1','S','2','S','3','S','4','S','1','S','6','S','7','S','8','S','9')).toBe('Não Pode repetir posições');
+		h.navegar('Tipo de Consumidor');
+		h.navegar('Tipo de Consumidor por Unidade');
+		paramGerais.filtrarUnidade(j.getValor('filial'));
+		expect(paramGerais.selecionarTipoConsumidor(j.getValor('tipoConsumidor'))).toBe(true);
+		paramGerais.editarParametros('Controle de acesso ao site - Snack Tech');
+		//testa a parametrização de todas posições marcadas
+		expect(paramGerais.consultarSaldo('S','1')).toBe(true);
+		expect(paramGerais.consultarExtrato('S','2')).toBe(true);
+		expect(paramGerais.carregarCartao('S','3')).toBe(true);
+		expect(paramGerais.bloquearCartao('S','4')).toBe(true);
+		expect(paramGerais.faleConosco('S','5')).toBe(true);
+		expect(paramGerais.restricaoAlimentar('S','6')).toBe(true);
+		expect(paramGerais.atualizarCadastro('S','7')).toBe(true);
+		expect(paramGerais.trocarSenha('S','8')).toBe(true);
+		expect(paramGerais.tabelaPreco('S','9')).toBe(true);
+		expect(paramGerais.salvarParametros()).toBe('Operação realizada com sucesso.');
 	});
-	/*executa os testes de parametrização da tela Bônus Carga de Crédito.
-	parâmetros: unidade, codigo do tipo consumidor, opção{S|N} de recebe bônus na recarga, valor da recarga, valor do bônus, saldo para receber o bônus, periodo para receber o bônus, quantidade de recargas do mês e o tipo de recebimento do bônus.
-	resultados: Primeiro teste executa a parametrização do bônus informando dados em todos os campos e quando salvar deverá receber a mensagem 'Ok.'
-	Segundo teste desfaz a parametrização do bônus apaga todos os campos e quando salvar deverá receber a mensagem 'Ok'
-	Terceiro teste marca a parametrização do bônus, deixando todos os campos em branco e quando salvar deverá receber a mensagem 'Campo obrigatório'.*/
+	//executa os testes de parametrização da tela Bônus Carga de Crédito
 	it('Bônus Carga de Crédito', function(){
-		expect(paramGerais.bonusCargaCredito('0001','02','S','12','2','12','Mensal','5','001')).toBe('Ok');
-		funcoes.fechaTela();
-		expect(paramGerais.bonusCargaCredito('0001','02','N','','','','','','')).toBe('Ok');
-		funcoes.fechaTela();
-		expect(paramGerais.bonusCargaCredito('0001','02','S','','','','','','')).toBe('Campo obrigatório');
+		h.navegar('Tipo de Consumidor');
+		h.navegar('Tipo de Consumidor por Unidade');
+		paramGerais.filtrarUnidade(j.getValor('filial'));
+		expect(paramGerais.selecionarTipoConsumidor(j.getValor('tipoConsumidor'))).toBe(true);
+		//testa a parametrização marcando o campo de utilização do bônus e inserindo valores nos campos obrigatórios
+		paramGerais.editarParametros('Bônus Carga de Crédito');
+		expect(paramGerais.bonusCargaCredito('S','12','2','12','Mensal','5',j.getValor('tipoRecebimento'))).toBe(true);
+		expect(paramGerais.salvarParametros()).toBe('Operação realizada com sucesso.');
+		//testa a parametrização desmarcando o campo de utilização do bônus e limpando todos os campos
+		paramGerais.editarParametros('Bônus Carga de Crédito');
+		expect(paramGerais.bonusCargaCredito('N','','','','','','')).toBe(true);
+		expect(paramGerais.salvarParametros()).toBe('Operação realizada com sucesso.');
+		//testa a parametrização deixando os campos obrigatórios em branco
+		paramGerais.editarParametros('Bônus Carga de Crédito');
+		expect(paramGerais.bonusCargaCredito('S','','','','','','')).toBe(true);
+		expect(paramGerais.salvarParametros()).toBe(false);
+		expect(h.campoObrigatorio()).toBe(true);
 	});
-	/*executa o teste de exclusão de um tipo de consumidor por unidade.
-	parâmetros: unidade, código do tipo de consumidor.
-	resultados: o teste seleciona a unidade e o tipo de consumidor a ser excluido, após confirmar a exclusão receberá o alerta com a mensagem 'Registros deletados com sucesso'.*/
+	//executa o teste de exclusão de um tipo de consumidor por unidade
 	it('Excluir Tipo de Consumidor por Unidade', function(){
-		expect(paramGerais.excluiTipoConsumidorUnidade('0001','02')).toBe('Registros deletados com sucesso');
+		h.navegar('Tipo de Consumidor');
+		h.navegar('Tipo de Consumidor por Unidade');
+		paramGerais.filtrarUnidade(j.getValor('filial'));
+		expect(paramGerais.selecionarTipoConsumidor(j.getValor('tipoConsumidor'))).toBe(true);
+		paramGerais.excluirTipoConsumidorUnidade(j.getValor('tipoConsumidor'));
+		expect(h.aguardaMensagem()).toBe('Excluído com sucesso!');
+	});
+	//executa o teste de parametrização da aba integrações
+	it('Parametrização da aba Integrações - Código externo do operador', function(){
+		h.navegar('Integrações');
+		h.navegar('Operador');
+		//testa a parametrização da subaba operador pesquisa e seleciona um operador existente
+		expect(paramGerais.selecionarOperador(j.getValor('operador'))).toBe(true);
+		//edita o código externo do operador
+		paramGerais.editarParametros();
+		paramGerais.editarOperador(j.getValor('codigoExterno'));
+		expect(paramGerais.salvarParametros()).toBe('Registros Salvos com Sucesso');
+	});
+	//executa o teste de parametrização da subaba imposto
+	it('Parametrização da aba Integrações - Código externo do imposto', function(){
+		h.navegar('Integrações');
+		h.navegar('Imposto');
+		//testa a parametrização da subaba imposto pesquisa e seleciona um imposto existente
+		expect(paramGerais.selecionarImposto(j.getValor('imposto'))).toBe(true);
+		//edita o código externo do imposto
+		paramGerais.editarParametros();
+		paramGerais.editarImposto(j.getValor('codigoExterno'));
+		expect(paramGerais.salvarParametros()).toBe('Registros Salvos com Sucesso');		
+	});
+	//executa o teste de parametrização da subaba tipoRecebimento
+	it('Parametrização da aba Integrações - Código externo do tipo de recebimento', function(){
+		h.navegar('Integrações');
+		h.navegar('Tipo de Recebimento');
+		//testa a parametrização da subaba imposto pesquisa e seleciona um imposto existente
+		expect(paramGerais.selecionarTipoRecebimento(j.getValor('tipoRecebimento'))).toBe(true);
+		//edita o código externo do imposto
+		paramGerais.editarParametros();
+		paramGerais.editarTipoRecebimento(j.getValor('codigoExterno'));
+		expect(paramGerais.salvarParametros()).toBe('Registros Salvos com Sucesso');		
 	});
 });

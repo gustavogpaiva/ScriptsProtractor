@@ -96,7 +96,7 @@ var controleAcessoCaixa = function () {
         z.component.footer.clickRightActionByLabel('Salvar');
         h.navegar('Grupo de Supervisores');
         z.component.footer.clickCenterActionByLabel('Adicionar');
-        h.pesquisaItem('DSGRUPOPER', j.getValor('grupoSupervisor'));
+        h.autoComplete('DSGRUPOPER', j.getValor('grupoSupervisor'));
         z.component.footer.clickRightActionByLabel('Salvar');
         z.component.footer.clickLeftActionByLabel('Voltar');
     };

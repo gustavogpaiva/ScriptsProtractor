@@ -6,11 +6,30 @@ var campanhaFidelidade = function () {
 
     var self = this;
 
-    this.cadastro = function () {
-        z.component.footer.clickRightActionByLabel('Filtro');
-        z.component.footer.clickCenterActionByLabel('Adicionar');
-        z.field.fieldFunctions.fill('DSCAMPANHA', 'Campanha Teste');
-        z.field.selectNative.click('IDCAMPANHA', 'Cartão Clube');
+    this.aplicaFilto = function (tipoCampanhao){
+        z.component.popup.isOpened().then(function(existePopup){
+            if(existePopup){
+                browser.sleep(2000);
+                z.field.selectNative.click('NMTPCAMPANHA', tipoCampanha);
+                console.log('Filtro localizado');
+            }else{
+                console.log('Filtro já aplicado');
+            }
+        });
+    };
+    this.selecionaCampanha = function (nomeCampanha) {
+        z.widget.grid.rowExists('DSCAMPANHA', nomeCampanha, '541476372518310325658').then(function(existeCampanha){
+            if (existeBeneficio){
+                z.widget.grid.click('DSCAMPANHA', nomeCampanha, '541476372518310325658');
+                console.log('Campanha encontrado');
+            } else{
+                console.log('Campanha não encontrado');
+            }
+        });
+    };
+    this.cadastroCampanha = function (nomeCampanha, mecanicaPontuacao) {
+        z.field.fieldFunctions.fill('DSCAMPANHA', nomeCampanha);
+        z.field.selectNative.click('IDCAMPANHA', mecanicaPontuacao);
         // z.field.fieldFunctions.click('NMTPCAMPANHA');
         var el = element.all(by.css('NMTPCAMPANHA'));
         el.click(); //o clique aqui não é recebido nem no manual

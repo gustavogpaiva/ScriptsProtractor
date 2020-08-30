@@ -1,178 +1,131 @@
 var ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
 var z = new ZeedhiAPIConstructor(browser, protractor);
 var h = require('../../../../page-objects/helper.po.js');
-var j = require('../../../../json/leitorJson.po.js');
 
-var consolidacaoVendas = function () {
-    //atualizar os parametros quando for corrigido os autoComplete
-    
-    var past30days = moment().subtract(30, 'days').calendar();
-    var today = moment().format('DD/MM/YYYY');
-    
+var consolidacaoVendas = function(){
     var self = this;
     
-    this.vendas = function () {
-        // filial
-        z.field.fieldFunctions.click('NMFILIAL');
-        z.widget.grid.click('NMFILIAL', j.getValor('filial'), '0');
-        // loja
-        z.field.fieldFunctions.click('NMLOJA');
-        z.widget.grid.click('CDLOJA', j.getValor('cdloja'), '0');
-        // caixa
-        z.field.fieldFunctions.click('CDCAIXA');
-        z.widget.grid.click('CDCAIXA', j.getValor('cdcaixa'), '9999', true);
-        z.component.footer.clickRightActionByLabel('Ok');
-        // tipo de retirada
-        z.field.fieldFunctions.click('NMTIPORETI');
-        z.widget.grid.click('CDTIPORETI', j.getValor('cdtipoRetirada'), '0');
-        //nome do setor
-        z.field.fieldFunctions.click('NMSETOR');
-        z.widget.grid.click('CDSETOR', j.getValor('cdsetor'), '0');
-        //data
-        z.field.calendar.selectIntervalDate('DTVENDA', past30days,today, 'pt_br');
-        //codigo cliente
-        z.field.fieldFunctions.click('CDCLIENTE');
-        z.widget.grid.click('CDCLIENTE', j.getValor('cliente'), '9999', true);
-        z.component.footer.clickRightActionByLabel('Ok');
-        //codigo tipo consumidor
-        z.field.fieldFunctions.click('CDTIPOCONS');
-        z.widget.grid.click('NMTIPOCONS', j.getValor('consumidor'),'9999', true);
-        z.component.footer.clickRightActionByLabel('Ok');
-        /* centro de custo cliente não tem registro
-        z.field.fieldFunctions.click('CDCCUSCLIE');
-        z.widget.grid.click('NMCCUSCLIE', j.getValor('centroCusto'),'9999', true)//no saas não tem centro de custo, adicionar no json depois
-        z.component.footer.clickRightActionByLabel('Ok');*/
-        // vendas
-        z.field.fieldFunctions.click('NRSEQVENDA');
-        z.widget.grid.checkAllRows('9999');
-        z.component.footer.clickRightActionByLabel('Ok');
-        // Agrupa itens de vendas para realizar consolidação
-        z.field.selectNative.click('TODASNF2', 'Sim');
-        // Somente itens de vendas não consolidados
-        z.field.selectNative.click('TODASNF', 'Sim');
-        z.component.footer.clickRightActionByLabel('Filtro');
-        z.component.footer.clickRightActionByLabel('Consolidar Vendas');
-        z.component.alert.clickButton('Sim');
-        z.component.alert.clickMessageOk();
-        z.component.alert.clickMessageOk();
-        z.component.footer.clickLeftActionByLabel('Voltar');
+    //Abre o filtro da tela caso esteja fechado
+    this.abrirFiltro = function(){
+       z.component.floatingControl.open();
+       z.component.floatingControl.selectAction('search');
+       z.component.floatingControl.selectAction('filter'); 
     };
-    
-    this.cancelamento = function () {
-        z.field.fieldFunctions.click('NMFILIAL');
-        z.widget.grid.click('NMFILIAL', j.getValor('filial'), '0');
-        z.field.fieldFunctions.click('NMLOJA');
-        z.widget.grid.click('CDLOJA', j.getValor('cdloja'), '0');
-        z.field.calendar.selectIntervalDate('DTVENDA', past30days,today, 'pt_br');
-        z.field.fieldFunctions.click('CDCAIXA');
-        z.widget.grid.click('CDCAIXA', j.getValor('cdcaixa'), '9999', true);
-        z.component.footer.clickRightActionByLabel('Ok');
-        //vendas
-        z.field.fieldFunctions.click('LSTVENDAS');
-        z.widget.grid.checkAllRows('9999');
-        z.component.footer.clickRightActionByLabel('Ok');
-        z.component.footer.clickRightActionByLabel('Filtro');
-        z.component.footer.clickRightActionByLabel('Cancelar Consolidação');
-        z.component.alert.clickButton('Sim');
-        z.component.alert.clickMessageOk();
+    //Apaga os dados nos campos do filtro.
+    this.limparFiltro = function(){
+        z.component.footer.clickCenterActionByIcon('close-x');
+    }; 
+    //Seleciona uma unidade no filtro.
+    this.selecionarUnidade = function(unidade){
+        h.filtroUnidade();
     };
-    
-    this.segundaConsolidacaoVendas = function () {
-        self.vendas();
-       /* z.field.fieldFunctions.click('NMLOJA');
-        z.widget.grid.click('CDLOJA', '001', '0');
-        z.field.fieldFunctions.click('CDCAIXA');
-        z.widget.grid.checkAllRows('9999');
-        z.component.footer.clickRightActionByLabel('Ok');
-        z.field.fieldFunctions.click('NMTIPORETI');
-        z.widget.grid.click('CDTIPORETI', '01', '0');
-        z.field.fieldFunctions.click('NMSETOR');
-        z.widget.grid.click('CDSETOR', '0003', '0');
-        z.field.calendar.selectIntervalDate('DTVENDA', '01/06/2018', '31/07/2018', 'pt_br');
-        z.field.fieldFunctions.click('CDCLIENTE');
-        z.widget.grid.click('__CHECKBOX', '', '9999');
-        z.component.footer.clickRightActionByLabel('Ok');
-        z.field.fieldFunctions.click('CDTIPOCONS');
-        z.widget.grid.checkAllRows('9999');
-        z.component.footer.clickRightActionByLabel('Ok');
-        /*centro de custo cliente não tem registro
-        z.field.fieldFunctions.click('CDCCUSCLIE');
-        z.widget.grid.checkAllRows('9999');
-        z.component.footer.clickRightActionByLabel('Ok');*/
-        // vendas 
-      /* z.field.fieldFunctions.click('NRSEQVENDA');
-        z.widget.grid.checkAllRows('9999');
-        z.component.footer.clickRightActionByLabel('Ok');
-        
-        z.field.selectNative.click('TODASNF2', 'Sim');
-        z.field.selectNative.click('TODASNF', 'Sim');
-        z.component.footer.clickRightActionByLabel('Filtro');
-        z.component.footer.clickRightActionByLabel('Consolidar Vendas');
-        z.component.alert.clickButton('Sim');
-        z.component.alert.clickMessageOk();
-        z.component.footer.clickLeftActionByLabel('Voltar');*/
+    //Seleciona uma ou mais lojas no filtro.
+    this.selecionarLoja = function(loja){
+        h.filtroLoja();
+    }
+    //Seleciona um ou mais caixas no filtro.
+    this.selecionarCaixa = function(caixa){
+        z.field.selectMultiple.click('CDCAIXA', 'NMCAIXA', caixa);  
     };
-    
-    this.editarParametrosConsolidacaoVendas = function () {
-        // esperar a remoção do autoComplete da tela
-        // filial
-        z.field.fieldFunctions.click('NMFILIAL');
-        z.widget.grid.click('NMFILIAL', j.getValor('filial'), '0');
-        z.component.footer.clickRightActionByLabel('Filtro');
-        z.widget.grid.click('NMFILIAL', j.getValor('filial'), '4647738362226231657726');
-        h.navegar('Consolidação de vendas');
-        z.component.footer.clickCenterActionByLabel('Editar');
-        h.grupoCampos('Restrição de Datas');
-        z.field.selectNative.click('IDCONSUMIOBR', 'Sim');
-        z.field.fieldFunctions.click('DTINITESCONS');
-        z.field.calendar.clickDate('02/02/2018', 'pt_br'); 
-        h.grupoCampos('Padões da consolidação');
-        z.field.selectNative.click('IDATUEST', 'Atualiza estoque da composição do produto');
-        /*z.field.fieldFunctions.click('DSSERIE');
-        z.externalComponent.selectAutocomplete.waitDropdown('DSSERIE');
-        z.externalComponent.selectAutocomplete.selectOption('DSSERIE', 'SERIE 01');*/
+    //Seleciona um tipo de retirada
+    this.selecionarTipoRetirada = function(tipoRetirada){
         z.field.fieldFunctions.click('NMTIPORETI');
-        z.externalComponent.selectAutocomplete.waitDropdown('NMTIPORETI');
-        z.externalComponent.selectAutocomplete.selectOption('NMTIPORETI', 'Consumo Produção');
-        z.field.fieldFunctions.click('NMSETOR');
-        z.externalComponent.selectAutocomplete.waitDropdown('NMSETOR');
-        z.externalComponent.selectAutocomplete.selectOption('NMSETOR', 'EXPEDIÇÃO');
-        z.field.selectNative.click('IDPERCONVESTNEG', 'Sim');
-        z.field.selectNative.click('IDVISUPRODNEG', 'Sim');
-        z.field.selectNative.click('IDGERANFVENPROD', 'Não');
-        z.field.selectNative.click('IDUTILCONTAB', 'Não');
-        z.field.selectNative.click('IDBLOQCONSOLIDA', 'Não');
-        z.component.footer.clickRightActionByLabel('Salvar');
+        h.getIdGrid().then(function(idGrid){
+            h.gridSemRegistros().then(function(semRegistros){
+                if(!semRegistros){
+                    z.widget.grid.click('CDTIPORETI', tipoRetirada, idGrid);
+                }
+                else
+                    z.component.footer.clickLeftActionByLabel('Cancelar');
+            });
+        });
     };
-    
-    this.parametrosUnidadeConsolidacao = function () {
-        z.field.fieldFunctions.click('NMFILIAL');
-        z.widget.grid.click('CDFILIAL', '0001', '0');
-        z.component.footer.clickRightActionByLabel('Filtro');
-        z.widget.grid.click('CDFILIAL', '0001', '4647738362226231657726');
-        h.navegar('Consolidação de vendas');
-        z.component.footer.clickCenterActionByLabel('Editar');
-        h.grupoCampos('Restrição de Datas');
-        z.field.selectNative.click('IDCONSUMIOBR', 'Não');
-        z.field.fieldFunctions.click('DTINITESCONS');
-        z.field.calendar.clickDate('27/01/2018', 'pt_br');
-        h.grupoCampos('Padões da consolidação');
-        z.field.selectNative.click('IDATUEST', 'Atualiza estoque da composição do produto');
-        /*z.field.fieldFunctions.click('DSSERIE');
-        z.externalComponent.selectAutocomplete.waitDropdown('DSSERIE');
-        z.externalComponent.selectAutocomplete.selectOption('DSSERIE', 'SERIE 01');*/
-        z.field.fieldFunctions.click('NMTIPORETI');
-        z.externalComponent.selectAutocomplete.waitDropdown('NMTIPORETI');
-        z.externalComponent.selectAutocomplete.selectOption('NMTIPORETI', 'Consumo Produção');
+    //Seleciona um setor
+    this.selecionarSetor = function(setor){
         z.field.fieldFunctions.click('NMSETOR');
-        z.externalComponent.selectAutocomplete.waitDropdown('NMSETOR');
-        z.externalComponent.selectAutocomplete.selectOption('NMSETOR', 'EXPEDIÇÃO');
-        z.field.selectNative.click('IDPERCONVESTNEG', 'Não');
-        z.field.selectNative.click('IDVISUPRODNEG', 'Não');
-        z.field.selectNative.click('IDGERANFVENPROD', 'Não');
-        z.field.selectNative.click('IDUTILCONTAB', 'Não');
-        z.field.selectNative.click('IDBLOQCONSOLIDA', 'Não');
-        z.component.footer.clickRightActionByLabel('Salvar');
+        h.getIdGrid().then(function(idGrid){
+            h.gridSemRegistros().then(function(semRegistros){
+                if(!semRegistros){
+                    z.widget.grid.click('CDSETOR', setor, idGrid);
+                }
+                else
+                    z.component.footer.clickLeftActionByLabel('Cancelar');
+            });
+        });
+    };
+    //Seleciona o período de vendas 
+    this.selecionarPeriodo = function(periodo){
+        var arrayDatas = periodo.split(' - ');
+        h.selectIntervalDate('DTVENDA', arrayDatas[0], arrayDatas[1]);
+        z.component.footer.clickRightActionByLabel('OK');
+    };
+    //Seleciona um ou mais clientes
+    this.selecionarCliente = function(cliente){
+        z.field.selectMultiple.click('CDCLIENTE', 'NMRAZSOCCLIE', cliente);
+    };
+    //Seleciona um ou mais tipos de consumidores 
+    this.selecionarTipoConsumidor = function(tipoConsumidor){
+        z.field.selectMultiple.click('CDTIPOCONS', 'NMTIPOCONS', tipoConsumidor);
+    };
+    //
+    this.selecionarCentroCusto = function(centroCusto){
+        z.field.selectMultiple.click('CDCCUSCLIE', 'NMCCUSCLIE', centroCusto);
+    };
+    //
+    this.selecionarVenda = function(venda){
+        z.field.selectMultiple.click('NRSEQVENDA', 'JNRSEQVENDA', venda);
+    };
+    //
+    this.selecionarProduto = async function(produto){
+        if(await h.campoClicavel('CDPRODUTO')){
+            z.field.fieldFunctions.click('CDPRODUTO');
+            browser.sleep(5000);
+            //obtem o id do grid do filtro
+            var idGrid = await h.getIdGrid();
+            for (var i in produto) {
+                //verifica se o widget de pesquisa está aberto
+                if(await z.component.floatingControl.isOpened()){
+                    //se foi feita uma pesquisa apaga o valor digitado no campo
+                    if(await z.util.elementExists(by.css('span.clear-button.zh-icon.zh-icon-close-x.zh-icon-no-border.zh-icon-color-white.searching'))){
+                        $('span.clear-button.zh-icon.zh-icon-close-x.zh-icon-no-border.zh-icon-color-white.searching').click();
+                    }
+                    //clica novamente no campo de pesquisa para ser preenchido
+                    $('#popup > span > section > section > section > section > div > div:nth-child(2) > div > div.control-menu > ul > li.float-action.expandable.fix-position-bottom.opened > div > div > div > div.floating-card-input > input').click();
+                }
+                else{
+                    z.component.floatingControl.toggle();
+                    z.component.floatingControl.selectAction('search');
+                }
+                browser.sleep(5000);
+                //preenche o campo de pesquisa com os nomes dos produtos presentes no array de produto
+                $('#popup > span > section > section > section > section > div > div:nth-child(2) > div > div.control-menu > ul > li.float-action.expandable.fix-position-bottom.opened > div > div > div > div.floating-card-input > input').sendKeys(produto[i]);    
+                
+                browser.sleep(5000);
+                //verifica se o produto existe no grid e seleciona
+                if(await z.widget.grid.rowExists('NMPRODUTO', produto[i], idGrid)){  
+                    z.widget.grid.checkRowByValue('NMPRODUTO', produto[i], idGrid);
+                }
+            }
+            z.component.footer.clickRightActionByLabel('Ok');                    
+        }
+    };
+    //
+    this.agruparItens = function(opcao){
+        z.field.selectNative.click('TODASNF2', opcao);
+    };
+    //
+    this.itensNaoConsolidado = function(opcao){
+        h.selectNative('TODASNF', opcao);
+    };
+    //
+    this.filtrarConsolidacao = function(){
+        z.component.footer.clickRightActionByLabel('Filtrar');
+    };
+    //verifica se o grid possui registros para o período 
+    this.gridPossuiRegistros = async function(){
+        //verifica se o grid está sem registros ou se foi preenchido com informações
+        browser.sleep(5000);
+        return (!await h.gridSemRegistros(await h.getIdGrid()));
     };
 };
 module.exports = new consolidacaoVendas();

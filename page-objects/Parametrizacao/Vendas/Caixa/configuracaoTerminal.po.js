@@ -5,27 +5,33 @@ var h = require('../../../../page-objects/helper.po.js');
 
 var configTerminal = function () {
     var self = this;
-    
-    this.cadastrarConfiguracao = async function (codigo) {
-        //seleciona a unidade e a loja e clica na opção para filtrar
+
+    this.filtrarConfiguracao = async function (){
+        if(!await z.component.popup.isOpened()){
+            z.component.floatingControl.toggle();
+            z.component.floatingControl.selectAction('search');
+            z.component.floatingControl.selectAction('filter');
+        }
+        browser.sleep(8000);
         h.filtroUnidade();
+        browser.sleep(8000);
         h.filtroLoja();
         z.component.footer.clickRightActionByLabel('Filtrar');
-
+    };
+    
+    this.cadastrarConfiguracao = async function (codigo) {
         //adiciona uma nova loja, informando código e o nome
         z.component.footer.clickCenterActionByLabel('Adicionar');
 
         //loop para buscar todos 'id'NMCONFTELA e tentar inserir um valor em input
-        //não fazer essa parte de código uma função pois não funciona. funções da API tb n funcionam.
-        //por gentileza não mexer nessa parte do código
         var elementos = element.all(by.name('NMCONFTELA'));
         elementos.each(function (el) {
             el.isDisplayed().then(function (displayed) {
                 if (displayed) {
                     try {
                         el.sendKeys(codigo)
-                    } catch (err) {
-                        console.log(err);
+                    } catch (erro) {
+                        console.log(erro);
                     }
                 }
             })
@@ -122,6 +128,9 @@ var configTerminal = function () {
 
         //define o tamanho da fonte do grupo
         z.field.fieldFunctions.fill('NRFONTETEXT', '8');
+
+        //define se o grupo vai ser exibido no auto atendimento
+        h.selectNative('IDSHOWTAA', 'Sim');
         
         //clica em salvar o grupo de produtos da configuração do terminal do caixa
         z.component.footer.clickRightActionByLabel('Salvar');
@@ -129,7 +138,7 @@ var configTerminal = function () {
         //abre um grupo cadastrado para inserir um produto dentro do grupo
         z.widget.grid.click('DSBUTTON', 'Teste de inserção','845309593188953947591');
         //navega até a aba Produtos
-        $$('a.ng-binding').get(7).click();
+        $$('a.ng-binding').get(9).click();
 
         z.component.footer.clickCenterActionByLabel('Adicionar');
 
@@ -143,35 +152,28 @@ var configTerminal = function () {
 
         h.selectNative('IDTPBUTTON', 'Produtos');
 
-        //z.field.fieldFunctions.click('NMPRODUTO');
-        var elementos = element.all(by.css('#NMPRODUTO'));
-        elementos.each(function(el){
-           el.isDisplayed().then(function(displayed){
-               if(displayed){
-                   try{
-                       el.click();
-                   } catch(err){
-                       console.log(err);
-                   }
-               }
-           });
-        });
+        //clica no campo produto, pesquisa o produtos e cadastra para o grupo
+        h.click('#NMPRODUTO > span.zh-icon.zh-icon-search.zh-icon-no-border');
         browser.sleep(3000);
-        z.util.pressKey(j.getValor('produto'));
+        $$('div.floating-card-input > input').get(6).sendKeys(j.getValor('produto'));
         z.widget.grid.click('NMPRODUTO', j.getValor('produto'), '9009');
         
         //insere o nome dos produtos para o idioma ingles e espanhol
-        z.field.fieldFunctions.fill('DSBUTTONINGLES', 'Rolled');
-        z.field.fieldFunctions.fill('DSBUTTONESPANH', 'Enroladinho');
+        z.field.fieldFunctions.fill('DSBUTTONINGLES', 'Product');
+        z.field.fieldFunctions.fill('DSBUTTONESPANH', 'Producto');
 
-        //h.selectNative('IDEXIBEAPPCONS', 'Sim');
-        //seleciona a opção se o produto permite venda no delivery
+        //seleciona a opção se o produto permite venda no delivery -> h.selectNative('IDEXIBEAPPCONS', 'Sim');
         element.all(by.css('div.new-select.input-text.form-input-margin-bottom.mousetrap.form-control')).get(4).click();
         element.all(by.css('li.option')).get(25).click();
 
+        //define o tamanho da fonte
         z.field.fieldFunctions.fill('NRFONTETEXT', '08');
         //clica para salvar o novo produto no grupo de produtos 
         z.component.footer.clickRightActionByLabel('Salvar');
+        //caso exiba algum alerta de erro clica no botão ok e cancela o cadastro do produto
+        if(await h.alertaDeErro())
+            z.component.footer.clickLeftActionByLabel('Cancelar');
+
         z.component.footer.clickLeftActionByLabel('Voltar');
 
         h.navegar('Grupos de Recebimento');
@@ -203,7 +205,7 @@ var configTerminal = function () {
         if(await z.widget.grid.rowExists('DSBUTTON', 'Teste de inserção' ,'8453095932400867749703')){
             z.widget.grid.click('DSBUTTON', 'Teste de inserção' ,'8453095932400867749703');
             //navega até aba tipo de recebimento
-            $$('a.ng-binding').get(7).click();
+            $$('a.ng-binding').get(8).click();
             z.component.footer.clickCenterActionByLabel('Adicionar');
 
             //seleciona a pagina do tipo de recebimento
@@ -235,7 +237,8 @@ var configTerminal = function () {
             z.field.fieldFunctions.click('CDSALA');
             if(await h.gridSemRegistros('9009')){
                 z.component.footer.clickLeftActionByLabel('Cancelar');
-                return 'Ambiente para mesas não foi cadastrado';
+                z.component.footer.clickLeftActionByLabel('Cancelar');
+                //return 'Ambiente para mesas não foi cadastrado';
             }
             else{
                 z.widget.grid.click('NMSALA', j.getValor('ambiente'), '9009');
@@ -272,12 +275,6 @@ var configTerminal = function () {
     };
     
     this.editarConfTerminal = async function (caixa, codigo) {
-        if(await z.component.popup.isOpened()){
-            //seleciona a unidade e a loja e clica na opção para filtrar
-            h.filtroUnidade();
-            h.filtroLoja();
-            z.component.footer.clickRightActionByLabel('Filtrar');
-        }
         if(await z.widget.grid.rowExists('NMCONFTELA', j.getValor('nomeAlteracaoCadLoja'), '845309593783672194568')){
             z.widget.grid.click('NMCONFTELA',j.getValor('nomeAlteracaoCadLoja'), '845309593783672194568');
             //pressiona o botão editar
@@ -315,12 +312,6 @@ var configTerminal = function () {
     };
     
     this.excluirConfTerminal = async function () {
-        if(await z.component.popup.isOpened()){
-            //seleciona a unidade e a loja e clica na opção para filtrar
-            h.filtroUnidade();
-            h.filtroLoja();
-            z.component.footer.clickRightActionByLabel('Filtrar');
-        }
         if(await z.widget.grid.rowExists('NMCONFTELA', 'CAIXA PDV LOJA 5', '845309593783672194568')){
             z.widget.grid.click('NMCONFTELA', 'CAIXA PDV LOJA 5', '845309593783672194568');
             z.component.footer.clickCenterActionByLabel('Excluir');
@@ -336,12 +327,6 @@ var configTerminal = function () {
     };
     
     this.cadastroSemNome = async function () {
-        if(await z.component.popup.isOpened()){
-            //seleciona a unidade e a loja e clica na opção para filtrar
-            h.filtroUnidade();
-            h.filtroLoja();
-            z.component.footer.clickRightActionByLabel('Filtrar');
-        }
         z.component.footer.clickCenterActionByLabel('Adicionar');
         z.component.footer.clickRightActionByLabel('Salvar');
         
@@ -359,12 +344,6 @@ var configTerminal = function () {
     
     this.edicaoSemNome = async function () {
         browser.sleep(5000);
-        if(await z.component.popup.isOpened()){
-            //seleciona a unidade e a loja e clica na opção para filtrar
-            h.filtroUnidade();
-            h.filtroLoja();
-            z.component.footer.clickRightActionByLabel('Filtrar');
-        }
         //seleciona a configuração do terminal do caixa
         z.widget.grid.click('NMCONFTELA', j.getValor('nomeAlteracaoCadLoja'), '845309593783672194568');
         z.component.footer.clickCenterActionByIcon('pencil');

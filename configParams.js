@@ -1,6 +1,7 @@
 module.exports = {
 	seleniumAddress: 'http://localhost:4444/wd/hub', //serviço
-    baseUrl: 'https://rc-manage.teknisa.cloud'
+    baseUrl: 'http://manageteste.teknisa.com'
     //baseUrl: 'https://manage.teknisa.com'
-    //baseUrl: 'http://teste.teknisa.com/odhen/management_man_PROD_2273_SUB_33786//modules/man/mobile'
+    //baseUrl: 'http://gustavopaiva.zeedhi.com/workfolder/management/modules/login/mobile/#/login#authentication'
+    //baseUrl: 'http://thiagocosta1.zeedhi.com/workfolder/management/modules/login/mobile/#/login#authentication'
 };

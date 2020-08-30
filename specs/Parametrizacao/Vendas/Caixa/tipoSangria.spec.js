@@ -7,39 +7,53 @@ const fs = require('fs');
 
 describe('Testes da tela Tipo de Sangria', function () {
 
-    beforeEach(function () {
+    beforeAll(function () {
         loginPage.login();
         h.tela('Tipo de Sangria');
     });
 
-    afterEach(function () {
+    afterAll(function () {
         h.sairDoSistema();
     });
 
-    it('Cadastro de Tipo de Sangria', function () {
-        expect(sangria.cadastrarSangria()).toBe(true);
+    beforeEach(function(){
+        sangria.selecionarUnidade();
     });
 
-   /* it('Tenta Realizar Cadastro com Mesmo Código', function () {
-        expect(sangria.cadastroCodigoIgual()).toBe('Essa combinação de códigos já existe no banco de dados');
-    });*/
+    afterEach(function(){
+        h.fechaTela();
+    });
+
+    it('Cadastro de Tipo de Sangria', function () {
+        sangria.cadastrarSangria('Movimento');
+        expect(h.aguardaMensagem()).toBe('Operação realizada com sucesso.');
+    });
+
+    it('Tenta Realizar Cadastro com Mesmo Código', function () {
+        sangria.cadastrarSangria('Movimento');
+        expect(h.aguardaMensagem()).toBe('Já existe um registro com esse código!');
+    });
 
     it('Edição de Tipo de Sangria', function () {
-        expect(sangria.editarSangria()).toBe(true);
+        sangria.editarSangria();
+        expect(h.aguardaMensagem()).toBe('Operação realizada com sucesso.');
     });
 
-   /* it('Editar e Deixar Campo em Branco', function () {
-        expect(sangria.editarCampoBranco()).toEqual('Todos os campos obrigatórios devem ser preenchidos!');
+    it('Editar e Deixar Campo em Branco', function () {
+        sangria.editarCampoBranco();
+        expect(h.aguardaMensagem()).toBe('Todos os campos obrigatórios devem ser preenchidos!');
         
-    });*/
+    });
 
     it('Exclusão de Tipo de Sangria', function () {
-        expect(sangria.excluirSangria()).toBe(true);
-        //sem expect pois nao existe mensagem de interação
+        sangria.excluirSangria();
+        expect(h.aguardaMensagem()).toBe('Excluído com sucesso!');
     });
 
-   /* it('Tentar Excluir tipo de Sangria Padrão', function () {
-        expect(sangria.tentarExcluir()).toBe('O tipo de sangria padrão não pode ser excluido');
-    });*/
+    it('Tentar Excluir tipo de Sangria Padrão', function () {
+        sangria.tentarExcluir();
+        expect(h.aguardaMensagem()).toBe('O tipo de sangria padrão não pode ser excluído!');
+       
+    });
 
 });

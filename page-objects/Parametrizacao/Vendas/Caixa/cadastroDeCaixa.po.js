@@ -1,6 +1,7 @@
 var ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
 var z = new ZeedhiAPIConstructor(browser, protractor);
 var h = require('../../../../page-objects/helper.po.js');
+var key = require('protractor-hotkeys');
 
 var cadastroDeCaixa = function () {
 	var self = this;
@@ -15,7 +16,8 @@ var cadastroDeCaixa = function () {
 		z.component.popup.isOpened().then(function(aberto){
     		if(aberto){
 	    		h.filtroUnidade();
-				h.filtroLoja();	
+	    		browser.sleep(3000);
+	    		h.filtroLoja();
 				z.component.footer.clickRightActionByLabel('Filtrar');
 			}
     	});
@@ -40,6 +42,7 @@ var cadastroDeCaixa = function () {
 			if (alert) {
 				z.component.alert.clickMessageOk();
 				z.component.footer.clickLeftActionByLabel('Cancelar');
+				console.log('Cadastro do novo caixa foi cancelado.');
 			}
 		});//promiseAlert
 
@@ -60,49 +63,57 @@ var cadastroDeCaixa = function () {
     	});
 
 		//pesquisa no grid se o caixa está cadastrado
-		if (z.widget.grid.rowExists('CDCAIXA', caixa, '1311172682190641126624')) {
-			//seleciona o caixa no grid
-			z.widget.grid.click('CDCAIXA', caixa, '1311172682190641126624');
-			//pressiona o botão editar
-			z.component.footer.clickCenterActionByIcon('pencil');
-			//preenche os campos a serem alterados
-			if (nome != null)
-			{ z.field.fieldFunctions.fill('NMCAIXA', nome); }
-			if (tipo != null)
-			{ h.selectNative('IDCONFVENDA', tipo); }
-			if (habilitado != null)
-			{ h.selectNative('IDCAIXAFISCA', habilitado); }
-			if (modalidade != null)
-			{ h.selectNative('IDHABCAIXAVENDA', modalidade); }
-			if (emissao != null)
-			{ h.selectNative('IDTPEMISSAOFOS', emissao); }
-			if (controle != null && tipo == 'Venda') {
-				//abre o filtro e seleciona um caixa controle
-				z.field.fieldFunctions.click('NMCAIXACONTROLE');
-				h.getIdGrid().then(function(idGrid){
-					if (z.widget.grid.rowExists('CDCAIXA', controle, idGrid)) {
-						z.widget.grid.click('CDCAIXA', controle, idGrid);
-					}
-				});
+		z.widget.grid.rowExists('CDCAIXA', caixa, '1311172682190641126624').then(function(existeCaixa){
+			if(existeCaixa){
+				//seleciona o caixa no grid
+				z.widget.grid.click('CDCAIXA', caixa, '1311172682190641126624');
+				//pressiona o botão editar
+				z.component.footer.clickCenterActionByIcon('pencil');
+				//preenche os campos a serem alterados
+				if (nome != null)
+				{ z.field.fieldFunctions.fill('NMCAIXA', nome); }
+				if (tipo != null)
+				{ h.selectNative('IDCONFVENDA', tipo); }
+				if (habilitado != null)
+				{ h.selectNative('IDCAIXAFISCA', habilitado); }
+				if (modalidade != null)
+				{ h.selectNative('IDHABCAIXAVENDA', modalidade); }
+				if (emissao != null)
+				{ h.selectNative('IDTPEMISSAOFOS', emissao); }
+				if (controle != null && tipo == 'Venda') {
+					//abre o filtro e seleciona um caixa controle
+					z.field.fieldFunctions.click('NMCAIXACONTROLE');
+					h.getIdGrid().then(function(idGrid){
+						if (z.widget.grid.rowExists('CDCAIXA', controle, idGrid)) {
+							z.widget.grid.click('CDCAIXA', controle, idGrid);
+							console.log('Selecionou o caixa controle: '+controle);
+						}
+						else
+							console.log('Não existe o caixa controle: '+controle);
+					});
+				}
+				if (setor != null) {
+					//abre o filtro e seleciona um setor cadastrado
+					z.field.fieldFunctions.click('NMSETOR');
+					h.getIdGrid().then(function(idGrid){
+						if (z.widget.grid.rowExists('CDSETOR', setor, idGrid)) {
+							z.widget.grid.click('CDSETOR', setor, idGrid);
+							console.log('Selecionou o setor: '+setor);
+						}
+						else
+							console.log('Não existe o setor: '+setor);
+					});
+				}
+				//confirma as alterações
+				z.component.footer.clickRightActionByLabel('Salvar');
+				z.component.footer.clickLeftActionByLabel('Voltar');
+				console.log('Salvando alterações e voltando para o grid da tela principal.');
+				cxEditado = true;				
 			}
-			if (setor != null) {
-				//abre o filtro e seleciona um setor cadastrado
-				z.field.fieldFunctions.click('NMSETOR');
-				h.getIdGrid().then(function(idGrid){
-					if (z.widget.grid.rowExists('CDSETOR', setor, idGrid)) {
-						z.widget.grid.click('CDSETOR', setor, idGrid);
-					}
-				});
+			else{
+				console.log('O caixa não foi encontrado: '+caixa);
 			}
-			//confirma as alterações
-			z.component.footer.clickRightActionByLabel('Salvar');
-			cxEditado = true;
-		}
-		//cancela o cadastro do novo caixa e volta ao grid da tela cadastro de caixa
-		else {
-			z.component.footer.clickLeftActionByLabel('Cancelar');
-			z.component.footer.clickLeftActionByLabel('Voltar');
-		}
+		});
 		return cxEditado;
 	};
 	/*inativa um caixa cadastrado na loja, passando como parâmetros o código de unidade, loja e caixa, caso o caixa está inativo é encerrada a rotina*/
@@ -160,11 +171,19 @@ var cadastroDeCaixa = function () {
     			//abre o filtro suspenso para pesquisar no grid
 				z.component.floatingControl.open();
 				z.component.floatingControl.selectAction('search');
-				//envia o caixa a ser pesquisado
-				z.util.pressKey(caixa);
+				//apaga o valor digitado e envia o número do caixa no campo de pesquisa
+				//z.util.pressKey(caixa);
+				z.util.elementExists(by.css('span.clear-button.zh-icon.zh-icon-close-x.zh-icon-no-border.zh-icon-color-white.searching')).then(function(existe){
+					if(existe){
+						z.util.clickElement(by.css('span.clear-button.zh-icon.zh-icon-close-x.zh-icon-no-border.zh-icon-color-white.searching'));
+					}
+				});
+				z.util.clickElement(by.css('div.floating-card-input > input'));
+        		$('div.floating-card-input > input').sendKeys(caixa);
 			}
 			if(aberto){
 				h.filtroUnidade();
+				browser.sleep(3000);
 				h.filtroLoja();	
 				z.component.footer.clickRightActionByLabel('Filtrar');
 			}
@@ -176,9 +195,8 @@ var cadastroDeCaixa = function () {
 			z.widget.grid.click('CDCAIXA', caixa, '1311172682190641126624');
 			h.navegar('Parâmetros');
 		}
-		else {
-			z.component.footer.clickLeftActionByLabel('Voltar');
-		}
+		else
+			console.log('O caixa: '+caixa+' não está disponível no grid.');
 	};
 	/*executa a parametrização do sistema TEF*/
 	this.TEF = function (utilTef, consCheque, bloqDigCartao, solParcCred, tipoTef, portTef, localTef, codLojTef, codTermTef, ipTef) {
@@ -193,6 +211,7 @@ var cadastroDeCaixa = function () {
 		h.grupoCampos('Parametrização TEF');
 		
 		//caso utilize TEF discado ou TEF Dedicado deve informar os três primeiros campos da tela
+		console.log(utilTef);
 		if (utilTef == 'Utiliza TEF Dedicado' || utilTef == 'Utiliza TEF Discado') {
 			h.selectNative('IDUTILCHEQ', consCheque);
 			h.selectNative('IDBLOQIDCART', bloqDigCartao);
@@ -203,6 +222,7 @@ var cadastroDeCaixa = function () {
 		if (utilTef == 'Utiliza TEF Dedicado') {
 			h.selectNative('IDTPTEF', tipoTef);
 			//campos somente utilizados no sistema Auttar
+			console.log('Tipo do TEF: '+tipoTef);
 			if (tipoTef == 'Auttar') {
 				z.field.fieldFunctions.fill('CDPORTATEF', portTef);
 				z.field.fieldFunctions.fill('CDESTTEF', localTef);
@@ -216,17 +236,6 @@ var cadastroDeCaixa = function () {
 			if (tipoTef == 'Cappta' || tipoTef == 'Sitef' || tipoTef == 'Scope' || tipoTef == 'Auttar')
 			{ z.field.fieldFunctions.fill('CDTERTEF', codTermTef); }	
 		}
-
-		//salva os parâmetros definidos e encerra o teste da tela
-		z.component.footer.clickRightActionByLabel('Salvar');
-
-		//retorna a mensagem confirmando a parametrização da aba frente de caixa 1
-		return z.component.notification.isNotificationMessagePresent().then(function(presente){
-			if(presente)
-				return z.component.notification.getText(0);
-			//volta para tela principal de cadastro de caixa
-			z.component.footer.clickLeftActionByLabel('Voltar');
-		});
 	};
 	/*executa a parametrização da tela Frente Caixa (1)*/
 	this.frenteDeCaixa1 = function (compFiscDeb, impCompDebCons, solDigObsDebCons, impComCredPes, solVendBalcao, solCpfCnpj, msgExibe, impCodBar, padrao, compVendas, tipoTela) {
@@ -273,18 +282,6 @@ var cadastroDeCaixa = function () {
 		//seleciona no grid o tipo de tela venda
 		h.getIdGrid().then(function(idGrid){
 			z.widget.grid.click('IDTPTELAVE', tipoTela, idGrid);
-		});
-
-		//salva os parâmetros definidos e encerra o teste da tela
-		z.component.footer.clickRightActionByLabel('Salvar');
-
-		//volta para tela principal de cadastro de caixa
-		z.component.footer.clickLeftActionByLabel('Voltar');
-
-		//retorna a mensagem confirmando a parametrização da aba frente de caixa 1
-		return z.component.notification.isNotificationMessagePresent().then(function(presente){
-			if(presente)
-				return z.component.notification.getText(0);
 		});
 	};
 	/*executa a parametrização da tela Frente Caixa (2)*/
@@ -333,18 +330,6 @@ var cadastroDeCaixa = function () {
 		//define os parametros para imprimir pedidos na produção
 		h.grupoCampos('Imprime Pedido na Produção');
 		h.selectNative('IDIMPPEDPROD', impPedSetorProd);
-
-		//salva os parâmetros definidos e encerra o teste da tela
-		z.component.footer.clickRightActionByLabel('Salvar');
-
-		//volta para tela principal de cadastro de caixa
-		z.component.footer.clickLeftActionByLabel('Voltar');
-
-		//retorna a mensagem confirmando a parametrização da aba frente de caixa 2
-		return z.component.notification.isNotificationMessagePresent().then(function(presente){
-			if(presente)
-				return z.component.notification.getText(0);
-		});
 	};
 	/*executa a parametrização da tela Frente Caixa (3)*/
 	this.frenteDeCaixa3 = function (senhaCupFisc, obrigFechaCaixa, numSerieNfce, utilSATComp, servSAT, agrupAutoPag, caixaSincDlv, impAutoEntrega, impCupomFiscKDS, impCupomFiscQRCODE, impNFVenda, solEmailNFVenda, visualTelaPed, finPedExpDlv) {
@@ -357,64 +342,70 @@ var cadastroDeCaixa = function () {
 		//define os parametros para senha de cupom fiscal/pedido
 		h.grupoCampos('Senha Cupom Fiscal/Pedido');
 		h.selectNative('IDSENHACUP', senhaCupFisc);
+		h.grupoCampos('Senha Cupom Fiscal/Pedido');
 
 		//define os parametros para obrigar o fechamento do dia
 		h.grupoCampos('Obriga fechamento do dia');
 		h.selectNative('IDOBRIGFECHCAIX', obrigFechaCaixa);
+		h.grupoCampos('Obriga fechamento do dia');
 
 		//define os parametros para número série NFCE
 		h.grupoCampos('Número Série NFCe');
 		z.field.fieldFunctions.fill('CDSERIECX', numSerieNfce);
+		h.grupoCampos('Número Série NFCe');
 
 		//define os parametros para utilizar SAT Compartilhado
 		h.grupoCampos('Utiliza SAT Compartilhado');
 		h.selectNative('IDUTILSATCOMP', utilSATComp);
 		z.field.fieldFunctions.fill('CDURLWSSAT', servSAT);
+		h.grupoCampos('Utiliza SAT Compartilhado');
 
 		//define os parametros de agrupamento de comanda no auto-pagto da comanda
 		h.grupoCampos('Agrupamento de Comanda no Auto Pagamento Comanda');
 		h.selectNative('IDAGRUPACMDAPC', agrupAutoPag);
+		h.grupoCampos('Agrupamento de Comanda no Auto Pagamento Comanda');
+
+		//abaixa o scroll da tela
+		key.trigger('down down down down');
 
 		//define os parametros para sincronização delivery
 		h.grupoCampos('Sincronização com Delivery');
 		h.selectNative('IDSINCCAIXADLV', caixaSincDlv);
 		h.selectNative('IDIMPAUTENTREG', impAutoEntrega);
+		h.grupoCampos('Sincronização com Delivery');
 
 		//define os parametros para imprimir cupons na expedição do KDS
 		h.grupoCampos('Impressão Cupom Fiscal na expedição do pedido no KDS');
 		h.selectNative('IDIMPAUTCUPEXP', impCupomFiscKDS);
+		h.grupoCampos('Impressão Cupom Fiscal na expedição do pedido no KDS');
 
 		//define os parametros para impressão de cupom fiscal via QRCODE
 		h.grupoCampos('Impressão Cupom Fiscal via leitura QR-Code');
 		h.selectNative('IDLEITURAQRCODE', impCupomFiscQRCODE);
+		h.grupoCampos('Impressão Cupom Fiscal via leitura QR-Code');
 
 		//define os parametros para impressão de nota fiscal ao finalizar a venda
 		h.grupoCampos('Imprime nota fiscal após finalizar a venda');
 		h.selectNative('IDIMPRIMENOTA', impNFVenda);
+		h.grupoCampos('Imprime nota fiscal após finalizar a venda');
+
+		//abaixa o scroll da tela
+		key.trigger('down down down down');
 
 		//define os parametros para solicitar o envio de email da NF apos finalizar vendas
 		h.grupoCampos('Solicita email para envio da nota fiscal após finalizar a venda');
 		h.selectNative('IDENVIAEMAIL', solEmailNFVenda);
+		h.grupoCampos('Solicita email para envio da nota fiscal após finalizar a venda');
 
 		//define os parametros para visualizar a tela de pedido
 		h.grupoCampos('Visualiza Tela de Pedido');
 		h.selectNative('IDVISTELPED', visualTelaPed);
+		h.grupoCampos('Visualiza Tela de Pedido');
 
 		//define os parametros para visualizar a tela de pedido
 		h.grupoCampos('Finaliza Pedido Automático Delivery');
-		h.selectNative('IDVISTELPED', finPedExpDlv);
-
-		//salva os parâmetros definidos e encerra o teste da tela
-		z.component.footer.clickRightActionByLabel('Salvar');
-
-		//volta para tela principal de cadastro de caixa
-		z.component.footer.clickLeftActionByLabel('Voltar');
-
-		//retorna a mensagem confirmando a parametrização da aba frente de caixa 3
-		return z.component.notification.isNotificationMessagePresent().then(function(presente){
-			if(presente)
-				return z.component.notification.getText(0);
-		});
+		h.selectNative('IDFINPEDAUTDLV', finPedExpDlv);
+		h.grupoCampos('Finaliza Pedido Automático Delivery');
 	};
 	/*executa a parametrização da tela Abertura do Caixa*/
 	this.aberturaDeCaixa = function (solCotacao, baixaPeriferico, digRedZ, altFundoTroco, valFundoTroco, tipoCaixa, baixaDados) {
@@ -438,18 +429,6 @@ var cadastroDeCaixa = function () {
 		//define os parâmetros de atualização de dados das tabelas na inicialização do sistema
 		h.grupoCampos('Atualização dos dados das tabelas no cache local na inicialização do sistema');
 		h.selectNative('IDAUTOIMPTAB', baixaDados);
-
-		//salva os parâmetros definidos e encerra o teste da tela
-		z.component.footer.clickRightActionByLabel('Salvar');
-
-		//volta para tela principal de cadastro de caixa
-		z.component.footer.clickLeftActionByLabel('Voltar');
-
-		//retorna a mensagem confirmando a parametrização da aba abertura de caixa
-		return z.component.notification.isNotificationMessagePresent().then(function(presente){
-			if(presente)
-				return z.component.notification.getText(0);
-		});
 	};
 
 	/*executa a parametrização da tela Fechamento do Caixa*/
@@ -462,40 +441,38 @@ var cadastroDeCaixa = function () {
 		//define os parâmetros de recibo de sangria no fechamento do caixa
 		h.grupoCampos('Impressão do Recibo de Sangria no Fechamento do Caixa');
 		h.selectNative('IDEMIRECSANG', impRecSangFechCaixa);
+		h.grupoCampos('Impressão do Recibo de Sangria no Fechamento do Caixa');
 		//define os parâmetros do relatório de produtos
 		h.grupoCampos('Relatório de Produto');
 		h.selectNative('IDEMIRELPROD', confEmisRelProd);
 		h.selectNative('IDTRIBRELPRO', tribRelProd);
+		h.grupoCampos('Relatório de Produto');
+		//abaixa o scroll da tela
+		key.trigger('down down down down');
 		//define os parâmetros de emissão da redução Z no fechamento do caixa
 		h.grupoCampos('Emissão da Redução Z no Fechamento do Caixa');
 		h.selectNative('IDIMPREDZ', impRedZFechCaixa);
+		h.grupoCampos('Emissão da Redução Z no Fechamento do Caixa');
 		//define os parâmetros para geração da memória fita detalhe da impressora fiscal CAT-52
 		h.grupoCampos('Gera memória fita detalhe da impressora fiscal em arquivo (CAT-52)');
 		h.selectNative('IDGRAVAMFD', memFita);
+		h.grupoCampos('Gera memória fita detalhe da impressora fiscal em arquivo (CAT-52)');
 		//define os parâmetros para emissão da leitura x no fechamento do caixa
 		h.grupoCampos('Emissão da Leitura X no Fechamento do Caixa');
 		h.selectNative('IDIMPLEITURAX', impLeitX);
+		h.grupoCampos('Emissão da Leitura X no Fechamento do Caixa');
 		//define os parâmetros para informar número de depósito no fechamento do caixa
 		h.grupoCampos('Informa o número de depósito no Fechamento do Caixa');
 		h.selectNative('IDSOLNUMDEPFC', solNumDepFechCaixa);
+		h.grupoCampos('Informa o número de depósito no Fechamento do Caixa');
 		//define os parâmetros para gerar arquivo de vendas Ato Cotepe 17/04 - RJ
 		h.grupoCampos('Gera Arquivo de Vendas Ato Cotepe 17/04 - Rio de Janeiro');
 		h.selectNative('IDGERAARQVNDRIO', arqAtoCotepe);
+		h.grupoCampos('Gera Arquivo de Vendas Ato Cotepe 17/04 - Rio de Janeiro');
 		//define os parâmetos para realizar o fechamento cego do caixa
 		h.grupoCampos('Fechamento cego do Caixa');
 		h.selectNative('IDUTILFECHCEGO', fechaCego);
-
-		//salva os parâmetros definidos e encerra o teste da tela
-		z.component.footer.clickRightActionByLabel('Salvar');
-
-		//volta para tela principal de cadastro de caixa
-		z.component.footer.clickLeftActionByLabel('Voltar');
-
-		//retorna a mensagem confirmando a parametrização da aba exportação de vendas
-		return z.component.notification.isNotificationMessagePresent().then(function(presente){
-			if(presente)
-				return z.component.notification.getText(0);
-		});
+		h.grupoCampos('Fechamento cego do Caixa');
 	};
 	/*executa a parametrização da tela Exportação de Vendas*/
 	this.exportacaoDeVendas = function (caixaExp) {
@@ -504,25 +481,21 @@ var cadastroDeCaixa = function () {
 		h.navegar('Exportação de Vendas');
 
 		//pressiona o botão exportar e seleciona no filtro o caixa existente para exportação das vendas
-		z.component.footer.clickCenterActionByIcon('export');
+		z.component.footer.clickCenterActionByLabel('Adicionar');
 		z.field.fieldFunctions.click('NMCAIXA_V');
 		//obtem o id do grid da tela
 		h.getIdGrid().then(function(idGrid){
-			//seleciona o caixa no grid
-			z.widget.grid.checkRowByValue('CDCAIXA', caixaExp, idGrid);
+			z.widget.grid.rowExists('CDCAIXA', caixaExp, idGrid).then(function(existeCaixa){
+				if(existeCaixa){
+					//seleciona o caixa no grid
+					z.widget.grid.click('CDCAIXA', caixaExp, idGrid);					
+					console.log('O caixa '+caixaExp+' foi selecionado para exportação.');
+				}
+				else
+					console.log('O caixa '+caixaExp+' não foi encontrado no filtro.');
+			});
 		});
 		z.component.footer.clickRightActionByLabel('Ok');
-		//confirma a parametrização de exportação de caixas
-		z.component.footer.clickRightActionByLabel('Exportar');
-
-		//volta para tela principal de cadastro de caixa
-		z.component.footer.clickLeftActionByLabel('Voltar');
-
-		//retorna a mensagem confirmando a parametrização da aba exportação de vendas
-		return z.component.notification.isNotificationMessagePresent().then(function(presente){
-			if(presente)
-				return z.component.notification.getText(0);
-		});
 	};
 	/*executa a parametrização da tela Importação de Tabelas*/
 	this.importacaoDeVendas = function (caixaImp) {
@@ -531,25 +504,21 @@ var cadastroDeCaixa = function () {
 		h.navegar('Importação de Tabelas');
 
 		//pressiona o botão importar e seleciona no filtro o caixa existente para importação das vendas
-		z.component.footer.clickCenterActionByIcon('import');
+		z.component.footer.clickCenterActionByLabel('Adicionar');
 		z.field.fieldFunctions.click('NMCAIXA_V');
 		//obtem o id do grid da tela
 		h.getIdGrid().then(function(idGrid){
-			//seleciona o caixa no grid
-			z.widget.grid.click('CDCAIXA', caixaImp, idGrid);
+			z.widget.grid.rowExists('CDCAIXA', caixaImp, idGrid).then(function(existeCaixa){
+				if(existeCaixa){
+					//seleciona o caixa no grid
+					z.widget.grid.click('CDCAIXA', caixaImp, idGrid);					
+					console.log('O caixa '+caixaImp+' foi selecionado para importação.');
+				}
+				else
+					console.log('O caixa '+caixaImp+' não foi encontrado no filtro.');
+			});
 		});
 		z.component.footer.clickRightActionByLabel('Ok');
-		//confirma a parametrização de exportação de caixas
-		z.component.footer.clickRightActionByLabel('Importar');
-
-		//volta para tela principal de cadastro de caixa
-		z.component.footer.clickLeftActionByLabel('Voltar');
-
-		//retorna a mensagem confirmando a parametrização da aba importação das tabelas
-		return z.component.notification.isNotificationMessagePresent().then(function(presente){
-			if(presente)
-				return z.component.notification.getText(0);
-		});
 	};
 	/*executa a parametrização da tela Periféricos (1)*/
 	this.perifericos1 = function (geraArqDebug, imprPed, imprPuxa, imprNfce, imprSenha, imprPed2, imprKds) {
@@ -597,17 +566,6 @@ var cadastroDeCaixa = function () {
 		h.getIdGrid().then(function(idGrid){
 			z.widget.grid.click('NRSEQIMPRLOJA', imprKds, idGrid);
 		});
-		//salva os parâmetros definidos e encerra o teste da tela
-		z.component.footer.clickRightActionByLabel('Salvar');
-
-		//volta para tela principal de cadastro de caixa
-		z.component.footer.clickLeftActionByLabel('Voltar');
-
-		//retorna a mensagem confirmando a parametrização da aba periféricos
-		return z.component.notification.isNotificationMessagePresent().then(function(presente){
-			if(presente)
-				return z.component.notification.getText(0);
-		});
 	};
 	/*executa a parametrização da tela Periféricos (2)*/
 	this.perifericos2 = function (tipoBalanca, portBalanca, velBalanca, tipoDisplay, portDisplay, tipoGaveta, tipoLeitorProx, portLeitorProx, velLeitorProx, leCodBarToledo, iniCodBar, fimCodBar, iniQtde, fimQtde, iniValor, fimValor) {
@@ -650,19 +608,6 @@ var cadastroDeCaixa = function () {
 		z.field.fieldFunctions.fill('NRPOSFINQTCDBAR', fimQtde);
 		z.field.fieldFunctions.fill('NRPOSINIVRCDBAR', iniValor);
 		z.field.fieldFunctions.fill('NRPOSFINVRCDBAR', fimValor);
-		
-		
-		//salva os parâmetros definidos e encerra o teste da tela
-		z.component.footer.clickRightActionByLabel('Salvar');
-
-		//volta para tela principal de cadastro de caixa
-		z.component.footer.clickLeftActionByLabel('Voltar');
-
-		//retorna a mensagem confirmando a parametrização da aba periféricos 2
-		return z.component.notification.isNotificationMessagePresent().then(function(presente){
-			if(presente)
-				return z.component.notification.getText(0);
-		});
 	};
 	/*executa a parametrização da tela Vendedores Associados*/
 	this.vendedoresAssociados = function (vendedor) {
@@ -674,12 +619,19 @@ var cadastroDeCaixa = function () {
 		z.field.fieldFunctions.click('NMRAZSOCVEN');
 		//verifica se no grid de pesquisa dos vendedores existe o vendedor a ser associado ao caixa
 		vendedorParametrizado = h.getIdGrid().then(function(idGrid){
-			var vendedor = z.widget.grid.rowExists('CDVENDEDOR', vendedor, idGrid);
-			return vendedor.then(function (existeVendedor) {
+			return z.widget.grid.rowExists('CDVENDEDOR', vendedor, idGrid).then(function (existeVendedor) {
 				//seleciona o vendedor para o caixa e encerra o teste da tela
 				if (existeVendedor) {
 					z.widget.grid.click('CDVENDEDOR', vendedor, idGrid);
 					z.component.footer.clickRightActionByLabel('Ok');
+					z.component.footer.clickRightActionByLabel('Cadastrar Vendedores');
+					z.component.alert.isVisible().then(function(alertaVisivel){
+						if(alertaVisivel){
+							var alerta = z.component.alert.getText();
+							z.component.alert.clickButton('Sim');
+							return alerta;
+						}
+					});
 					return z.component.notification.getText(0);
 				}
 				//caso não exista vendedor cancela o cadastro e encerra o teste da tela

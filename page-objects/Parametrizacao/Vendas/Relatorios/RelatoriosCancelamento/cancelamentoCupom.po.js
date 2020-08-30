@@ -1,33 +1,102 @@
-var ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
-var z = new ZeedhiAPIConstructor(browser, protractor);
-var j = require('../../../../../json/leitorJson.po.js');
-var h = require('../../../../../page-objects/helper.po.js');
+const ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
+const z = new ZeedhiAPIConstructor(browser, protractor);
+const j = require('../../../../../json/leitorJson.po.js');
+const h = require('../../../../../page-objects/helper.po.js');
 
-var cancelamentoCupom = function () {
-    
-    var self = this;   
-    
-    this.cancelaCupom = async function () {
+class cancelamentoCupom {
+
+    limparFiltro() {
+        //apagar os dados nos campos do formulário
+        z.component.footer.clickCenterActionByIcon('close-x');
+    };
+
+    selecionarUnidade(...unidade) {
+        // Seleciona uma unidade no filtro
+        let fieldName   = 'CDFILIAL';
+        let columnName  = 'NMFILIAL';
+
+        z.field.selectMultiple.click(fieldName, columnName, unidade); 
+    };
+
+    selecionarCaixa(...caixa) {
+        let fieldName   = 'CDFILICAIXA';
+        let columnName  = 'NMCAIXA';
         
-        z.field.fieldFunctions.click('CDFILIAL');
-        //z.widget.grid.click('NMFILIAL', 'TEKNISA FOOD HOUSE', '9999');
-        z.component.footer.clickRightActionByLabel('Ok');
-        
-        z.field.fieldFunctions.click('CDFILICAIXA');
-        z.widget.grid.checkAllRows('9999');
-        //z.component.alert.clickButton('Sim');
-        z.component.footer.clickRightActionByLabel('Ok');
-        
-        z.field.calendar.selectIntervalDate('DTENTRVENDA','01/01/2018','30/06/2018', 'pt_br');//data fixa
-        
+        arguments.length != 0 ? z.field.selectMultiple.click(fieldName, columnName, caixa):
+                                this.todosCaixas(fieldName);
+    };
+
+    selecionarPeríodo(periodo) {
+        // Seleciona um período no filtro
+        let arrayDatas = periodo.split(' - ');
+        h.selectIntervalDate('DTENTRVENDA', arrayDatas[0], arrayDatas[1]);
+        z.component.footer.clickRightActionByLabel('OK');
+    };
+
+    emitirRelatorio() {
         z.component.footer.clickRightActionByLabel('Filtrar');
-        //var linha = await h.getTotalizador('Total (Unidade: 0001 - TEKNISA FOOD HOUSE - Loja: 001 - LOJA teste)');
-        //var coluna = await h.getPosColuna('Valor');
-        //var total = element(by.css('#grid-1058827152339227309348 > div.body > div > div:nth-child('+ await (linha + 1) +') > div:nth-child('+ await (coluna + 2) +') > span')).getText();
-        //dessa maneira funfou :)
-        var total = element(by.css('#grid-1058827152339227309348 > div.body > div > div.tr.cell1.group-footer > div.td.grid-group-footer.zh-standard-column.grid-align-right.grid-group-summary > span')).getText();
-        console.log('total = '+await total);
-        return await total;
+    };
+
+    async gridPossuiRegistros() {
+        //verifica se o grid está sem registros ou se foi preenchido com informações
+        browser.sleep(5000);
+        return (!await h.gridSemRegistros(await h.getIdGrid()));
+    };
+
+    todosCaixas(fieldName) {
+        z.field.fieldFunctions.click(fieldName);
+        z.widget.grid.checkAllRows('9999');
+        z.component.footer.clickRightActionByLabel('Ok');
+    };
+
+    gerarRelatorioPDF(){
+        let reportURL;
+        let screenURL;
+        
+        //gera o pdf se houver registros no grid, senão retorna a mensagem de que grid está sem registros
+        return this.gridPossuiRegistros().then(function(temRegistros){
+            if(temRegistros){    
+                screenURL = browser.getCurrentUrl();
+
+                z.externalComponent.report.openReportAction();
+                z.externalComponent.report.clickGeneratePDF();
+                browser.sleep(10000);
+                          
+                browser.driver.getAllWindowHandles().then(function(windows){
+                    browser.ignoreSynchronization = true;
+                    let initialWindowsQntd = windows.length;
+                    if (typeof windows !== 'undefined' &&
+                        windows.length > 1) {
+                        browser.driver.switchTo().window(windows[1]);
+                        reportURL = z.externalComponent.report.getPdfReportUrl();
+                        z.externalComponent.report.closePdfReport();
+                    }
+                    browser.ignoreSynchronization = false;
+                });
+      
+                return !(screenURL === reportURL);
+            }
+            else
+                return h.mensagemGrid();
+        });
+    };
+
+    gerarRelatorioXLS(){
+        z.externalComponent.report.generateXLSReport();
+        return z.externalComponent.report.isXlsReportSuccessfull();     
+    };
+
+    gerarRelatorioCSV(){
+        z.externalComponent.report.openReportAction();
+        z.util.clickElement(by.css('.zh-report-csv > .zh-report-text'));
+        return z.component.alert.isVisible().then(function(isAlertVisible){
+            return z.component.notification.count("error").then(function(errorCount){
+                return browser.driver.getAllWindowHandles().then(function(tabs){
+                    return !isAlertVisible && errorCount === 0 && tabs.length === 1;
+                });
+            });
+        });
     };
 };
+
 module.exports = new cancelamentoCupom();

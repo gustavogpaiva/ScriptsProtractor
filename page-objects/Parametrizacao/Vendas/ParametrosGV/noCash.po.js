@@ -35,7 +35,7 @@ var noCash = function () {
         //  Realiza login utilizando Cliente
         h.selectNative('LOGINCLIENTE', 'Sim');
         z.component.footer.clickRightActionByLabel('Salvar');
-        h.navegar('Unidade');
+        /*h.navegar('Unidade');
         z.component.footer.clickCenterActionByIcon('close-x')
         z.field.fieldFunctions.click('CDFILIAL');
         z.widget.grid.click('NMFILIAL', j.getValor('filial'), '9999', true);
@@ -49,7 +49,7 @@ var noCash = function () {
         h.getIdGrid().then(function(idGrid){
             z.widget.grid.click('NMRAZSOCCLIE', j.getValor('cliente'), idGrid);        
         });
-        z.component.footer.clickRightActionByLabel('Filtrar');
+        z.component.footer.clickRightActionByLabel('Filtrar');*/
     };
 };
 module.exports = new noCash();
