@@ -1,0 +1,132 @@
+var ZeedhiAPIConstructor = require('zeedhi-functional-test-api');
+var z = new ZeedhiAPIConstructor(browser, protractor);
+var h = require('../../../../page-objects/helper.po.js');
+var j = require('../../../../json/leitorJson.po.js');
+var moment = require('moment');
+
+var campanhaPromocional = function () {
+    
+    var self = this;
+    
+    this.adicionar = function () {
+        z.component.footer.clickRightActionByLabel('Filtrar');
+        z.component.footer.clickCenterActionByLabel('Adicionar');
+        z.field.fieldFunctions.fill('CDCAMPPROMO', '01');
+        z.field.fieldFunctions.fill('NMCAMPPROMO', 'Campanha de teste odhen');
+        z.field.fieldFunctions.fill('DTINIVGCAMP','01/01/2018');
+        z.field.fieldFunctions.fill('DTFINVGCAMP','23/07/2018');
+        z.field.fieldFunctions.fill('HRINICAMP', '0900');
+        z.field.fieldFunctions.fill('HRFINCAMP', '0000');
+        z.field.fieldFunctions.click('NMTIPOCONS');
+        z.widget.grid.click('NMTIPOCONS', j.getValor('consumidor'), '0');
+        z.field.selectNative.click('IDDIASEGUNDA', 'Não');
+        z.field.selectNative.click('IDDIATERCA', 'Não');
+        z.field.selectNative.click('IDDIAQUARTA', 'Não');
+        z.field.selectNative.click('IDDIAQUINTA', 'Não');
+        z.field.selectNative.click('IDDIASEXTA', 'Não');
+        z.field.selectNative.click('IDDIASABADO', 'Não');
+        z.field.selectNative.click('IDDIADOMINGO', 'Não');
+        z.component.footer.clickRightActionByLabel('Salvar');
+        z.widget.grid.click('NMCAMPPROMO', 'Campanha de teste odhen', '64912031137750467508');
+        h.navegar('Combinação de Produtos');
+        z.component.footer.clickCenterActionByLabel('Adicionar');
+        z.field.fieldFunctions.click('CDARVPRODPRIN');
+        z.util.pressKey(j.getValor('produto'));
+        z.widget.grid.click('NMPRODUTO', j.getValor('produto'), '0');
+        z.field.fieldFunctions.click('CDARVPRODCOMB');
+        z.util.pressKey(j.getValor('produto2'));
+        z.widget.grid.click('NMPRODUTO', j.getValor('produto2'), '0');
+        z.field.fieldFunctions.fill('HRINICOMB', '0900');
+        z.field.fieldFunctions.fill('HRFINCOMB', '2359');
+        z.field.selectNative.click('IDPERCVALOR', 'Percentual');
+        z.field.selectNative.click('IDAPLICADESACR', 'Não');
+        z.field.fieldFunctions.fill('VRDESCACRE', '10');
+        z.field.selectNative.click('IDDIASEGCOMB', 'Não');
+        z.field.selectNative.click('IDDIATERCOMB', 'Não');
+        z.field.selectNative.click('IDDIAQUACOMB', 'Não');
+        z.field.selectNative.click('IDDIAQUICOMB', 'Não');
+        z.field.selectNative.click('IDDIASEXCOMB', 'Não');
+        z.field.selectNative.click('IDDIASABCOMB', 'Não');
+        z.field.selectNative.click('IDDIADOMCOMB', 'Não');
+        z.component.footer.clickRightActionByLabel('Salvar');
+        h.navegar('Unidades Participantes');
+        z.component.footer.clickCenterActionByLabel('Adicionar');
+        z.field.fieldFunctions.click('NMFILIAL');
+        z.widget.grid.checkAllRows('9999');
+        z.component.footer.clickRightActionByLabel('Ok');
+        z.component.footer.clickRightActionByLabel('Salvar');
+    };
+    
+    this.codigoIgual = function () {
+        z.component.footer.clickRightActionByLabel('Filtro');
+        z.component.footer.clickCenterActionByLabel('Adicionar');
+        z.field.fieldFunctions.fill('CDCAMPPROMO', '01');
+        z.component.footer.clickRightActionByLabel('Salvar');
+        var msg = z.component.alert.getText();
+        z.component.alert.clickMessageOk();
+        z.component.footer.clickLeftActionByLabel('Cancelar');
+        return msg;
+    };
+    // moment não funcionou pra data aqui, mudar manualmente quando necessario
+    this.editar = function () {
+        z.component.footer.clickRightActionByLabel('Filtro');
+        z.widget.grid.click('NMCAMPPROMO', 'Campanha de teste odhen', '64912031137750467508');
+        z.component.footer.clickCenterActionByLabel('Editar');
+        z.field.fieldFunctions.fill('NMCAMPPROMO', 'Campanha de teste');
+        z.field.fieldFunctions.click('DTINIVGCAMP');
+        z.field.calendar.clickDate('02/01/2018', 'pt_br');
+        z.field.fieldFunctions.click('DTFINVGCAMP');
+        z.field.calendar.clickDate('20/09/2019', 'pt_br');
+        z.field.fieldFunctions.fill('HRINICAMP', '1000');
+        z.field.fieldFunctions.fill('HRFINCAMP', '2300');
+        z.field.fieldFunctions.click('NMTIPOCONS');
+        z.widget.grid.click('NMTIPOCONS', j.getValor('consumidor'), '0');
+        z.field.selectNative.click('IDDIASEGUNDA', 'Não');
+        z.field.selectNative.click('IDDIATERCA', 'Não');
+        z.field.selectNative.click('IDDIAQUARTA', 'Não');
+        z.field.selectNative.click('IDDIAQUINTA', 'Não');
+        z.field.selectNative.click('IDDIASEXTA', 'Não');
+        z.field.selectNative.click('IDDIASABADO', 'Não');
+        z.field.selectNative.click('IDDIADOMINGO', 'Não');
+        z.component.footer.clickRightActionByLabel('Salvar');
+        
+        h.navegar('Combinação de Produtos');
+        z.widget.grid.click('NMPRODPRIN', j.getValor('produto'), '6491203113686117843509');
+        z.component.footer.clickCenterActionByLabel('Editar');
+        z.field.fieldFunctions.click('CDARVPRODCOMB');
+        z.util.pressKey(j.getValor('produto2'));
+        z.widget.grid.click('NMPRODUTO', j.getValor('produto2'), '0');
+        z.field.selectNative.click('IDDIASEGCOMB', 'Sim');
+        z.field.selectNative.click('IDDIATERCOMB', 'Sim');
+        z.field.selectNative.click('IDDIAQUACOMB', 'Sim');
+        z.field.selectNative.click('IDDIAQUICOMB', 'Sim');
+        z.field.selectNative.click('IDDIASEXCOMB', 'Sim');
+        z.field.selectNative.click('IDDIASABCOMB', 'Sim');
+        z.field.selectNative.click('IDDIADOMCOMB', 'Sim');
+        z.component.footer.clickRightActionByLabel('Salvar');
+        z.component.footer.clickLeftActionByLabel('Voltar');
+        z.component.footer.clickLeftActionByLabel('Voltar');
+    };
+    
+    this.excluir = function () {
+        z.component.footer.clickRightActionByLabel('Filtro');
+        z.widget.grid.click('NMCAMPPROMO', 'Campanha de teste', '64912031137750467508');
+        h.navegar('Unidades Participantes');
+        z.widget.grid.checkAllRows('6491203114134504478537');
+        z.component.footer.clickCenterActionByLabel('Excluir');
+        z.component.alert.clickButton('Sim');
+        z.component.alert.clickMessageOk();
+        h.navegar('Combinação de Produtos');
+        z.widget.grid.checkAllRows('6491203113686117843509');
+        z.component.footer.clickCenterActionByLabel('Excluir');
+        z.component.alert.clickButton('Sim');
+        z.component.alert.clickMessageOk();
+        h.navegar('Campanha Promocional');
+        z.component.footer.clickCenterActionByLabel('Excluir');
+        z.component.alert.clickButton('Sim');
+        var msg = z.component.alert.getText();
+        z.component.alert.clickMessageOk();
+        return msg;
+    };
+};
+module.exports = new campanhaPromocional();
